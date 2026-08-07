@@ -13,8 +13,16 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Loads Back-end/.env into the process environment (if the file exists) so
+# the os.environ.get() calls below can pick up local secrets. Does nothing
+# in an environment where the vars are already set another way (e.g. a
+# real deployment), and never overrides a variable that's already set.
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -164,14 +172,20 @@ CORS_ALLOWED_ORIGINS = os.environ.get(
 
 # Email
 # https://docs.djangoproject.com/en/5.2/topics/email/
-# Defaults to printing emails to the console - there's no real SMTP server
-# in dev. Point DJANGO_EMAIL_BACKEND/EMAIL_HOST etc at a real provider for
-# production.
+# Defaults to printing emails to the console. Set DJANGO_EMAIL_BACKEND to
+# django.core.mail.backends.smtp.EmailBackend (see .env.example for a Gmail
+# SMTP setup) to actually send them.
 
 EMAIL_BACKEND = os.environ.get(
     'DJANGO_EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend'
 )
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@eventify.local')
+
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
 
 # Base URL of the frontend, used to build links (e.g. password reset) that
 # get emailed to users.
