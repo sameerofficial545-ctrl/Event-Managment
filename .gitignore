@@ -8,3 +8,10 @@ build/
 .DS_Store
 coverage/
 *.log
+
+# Python / Django
+venv/
+__pycache__/
+*.pyc
+db.sqlite3
+staticfiles/
