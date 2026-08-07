@@ -54,6 +54,20 @@ curl -X POST http://127.0.0.1:8000/api/auth/login/ \
 curl http://127.0.0.1:8000/api/auth/me/ -H "Authorization: Token <token>"
 ```
 
+## Postman collection
+
+`postman/Event-Managment.postman_collection.json` + `postman/Event-Managment.postman_environment.json`
+cover every endpoint above plus the error cases (duplicate username,
+invalid email, weak password, wrong login, missing/valid token, wrong
+method, unmatched route). Import both into Postman, select the
+"Event-Managment Local" environment, and run the collection - or from
+the CLI with Newman (Postman's own runner):
+
+```bash
+cd postman
+npx newman run Event-Managment.postman_collection.json -e Event-Managment.postman_environment.json
+```
+
 ## Error responses
 
 Every error - a validation failure, a bad auth token, an unmatched route, or

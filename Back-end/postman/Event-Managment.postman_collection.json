@@ -1,0 +1,286 @@
+{
+  "info": {
+    "name": "Event-Managment Auth API",
+    "description": "Registration and authentication endpoints for the DRF backend. Run against the 'Event-Managment Local' environment with the dev server up on http://127.0.0.1:8000.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.collectionVariables.get('testUsername')) {",
+          "  pm.collectionVariables.set('testUsername', 'postman_' + Date.now());",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Register - success",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('returns a token', () => pm.expect(body.token).to.be.a('string'));",
+              "pm.test('returns the created username', () => pm.expect(body.user.username).to.eql(pm.collectionVariables.get('testUsername')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"email\": \"{{testUsername}}@example.com\",\n  \"password\": \"{{testPassword}}\",\n  \"password2\": \"{{testPassword}}\",\n  \"first_name\": \"Post\",\n  \"last_name\": \"Man\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/register/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register", ""] }
+      }
+    },
+    {
+      "name": "Register - duplicate username -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('error envelope has username detail', () => pm.expect(body.error.details.username).to.be.an('array'));",
+              "pm.test('error code is bad_request', () => pm.expect(body.error.code).to.eql('bad_request'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"email\": \"someone-else-{{testUsername}}@example.com\",\n  \"password\": \"{{testPassword}}\",\n  \"password2\": \"{{testPassword}}\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/register/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register", ""] }
+      }
+    },
+    {
+      "name": "Register - invalid email -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('error envelope has email detail', () => pm.expect(body.error.details.email).to.be.an('array'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{testUsername}}_bademail\",\n  \"email\": \"not-an-email\",\n  \"password\": \"{{testPassword}}\",\n  \"password2\": \"{{testPassword}}\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/register/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register", ""] }
+      }
+    },
+    {
+      "name": "Register - weak password -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('error envelope has password detail', () => pm.expect(body.error.details.password).to.be.an('array'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{testUsername}}_weakpw\",\n  \"email\": \"{{testUsername}}_weakpw@example.com\",\n  \"password\": \"12345\",\n  \"password2\": \"12345\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/register/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register", ""] }
+      }
+    },
+    {
+      "name": "Register - password mismatch -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('error envelope has password2 detail', () => pm.expect(body.error.details.password2).to.be.an('array'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{testUsername}}_mismatch\",\n  \"email\": \"{{testUsername}}_mismatch@example.com\",\n  \"password\": \"{{testPassword}}\",\n  \"password2\": \"SomethingElse123\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/register/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register", ""] }
+      }
+    },
+    {
+      "name": "Login - wrong password -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('non_field_errors present', () => pm.expect(body.error.details.non_field_errors).to.be.an('array'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"password\": \"WrongPassword\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/login/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login", ""] }
+      }
+    },
+    {
+      "name": "Login - success",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('returns a token', () => pm.expect(body.token).to.be.a('string'));",
+              "pm.collectionVariables.set('token', body.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{testUsername}}\",\n  \"password\": \"{{testPassword}}\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/login/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login", ""] }
+      }
+    },
+    {
+      "name": "Me - without token -> 401",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 401', () => pm.response.to.have.status(401));",
+              "const body = pm.response.json();",
+              "pm.test('error code is not_authenticated', () => pm.expect(body.error.code).to.eql('not_authenticated'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/auth/me/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me", ""] }
+      }
+    },
+    {
+      "name": "Me - with token -> 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('returns the logged-in user', () => pm.expect(body.username).to.eql(pm.collectionVariables.get('testUsername')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/api/auth/me/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me", ""] }
+      }
+    },
+    {
+      "name": "Register - method not allowed (GET) -> 405",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 405', () => pm.response.to.have.status(405));",
+              "const body = pm.response.json();",
+              "pm.test('error code is method_not_allowed', () => pm.expect(body.error.code).to.eql('method_not_allowed'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/auth/register/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register", ""] }
+      }
+    },
+    {
+      "name": "Unmatched route -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 404', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/totally/bogus/", "host": ["{{baseUrl}}"], "path": ["api", "totally", "bogus", ""] }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "testUsername", "value": "" },
+    { "key": "token", "value": "" }
+  ]
+}
