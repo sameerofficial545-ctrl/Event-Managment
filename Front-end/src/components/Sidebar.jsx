@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { getDisplayName, getInitials } from '../utils/user'
 import {
   IconSparkle,
   IconDashboard,
@@ -21,6 +23,7 @@ const NAV_ITEMS = [
 
 function Sidebar({ open, onClose }) {
   const [active, setActive] = useState('Dashboard')
+  const { user, logout } = useAuth()
 
   return (
     <>
@@ -65,13 +68,13 @@ function Sidebar({ open, onClose }) {
 
         <div className="sidebar__footer">
           <div className="sidebar__user">
-            <span className="sidebar__avatar">SS</span>
+            <span className="sidebar__avatar">{getInitials(user)}</span>
             <div className="sidebar__user-info">
-              <strong>Sameer Shaik</strong>
-              <small>Event Organizer</small>
+              <strong>{getDisplayName(user)}</strong>
+              <small>{user?.email}</small>
             </div>
           </div>
-          <button type="button" className="sidebar__logout" aria-label="Log out">
+          <button type="button" className="sidebar__logout" onClick={logout} aria-label="Log out">
             <IconLogOut className="icon" />
           </button>
         </div>

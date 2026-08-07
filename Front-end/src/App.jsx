@@ -1,10 +1,15 @@
 import { useState } from 'react'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import Footer from './components/Footer'
+import ProtectedRoute from './components/ProtectedRoute'
+import { useAuth } from './context/AuthContext'
+import Login from './pages/auth/Login'
+import Register from './pages/auth/Register'
 import './App.css'
 
-function App() {
+function Dashboard() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
@@ -28,6 +33,28 @@ function App() {
         <Footer />
       </div>
     </div>
+  )
+}
+
+function App() {
+  const { initializing, isAuthenticated } = useAuth()
+
+  if (initializing) {
+    return <div className="app-loading">Loading…</div>
+  }
+
+  return (
+    <Routes>
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
+      <Route
+        path="/register"
+        element={isAuthenticated ? <Navigate to="/" replace /> : <Register />}
+      />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/" element={<Dashboard />} />
+      </Route>
+      <Route path="*" element={<Navigate to={isAuthenticated ? '/' : '/login'} replace />} />
+    </Routes>
   )
 }
 

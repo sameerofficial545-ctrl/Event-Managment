@@ -1,7 +1,11 @@
+import { useAuth } from '../context/AuthContext'
+import { getDisplayName, getInitials } from '../utils/user'
 import { IconMenu, IconSearch, IconBell, IconPlus } from './icons'
 import './Header.css'
 
 function Header({ onMenuClick }) {
+  const { user } = useAuth()
+
   return (
     <header className="header">
       <div className="header__left">
@@ -15,7 +19,7 @@ function Header({ onMenuClick }) {
         </button>
         <div className="header__heading">
           <p className="header__eyebrow">Dashboard</p>
-          <h1 className="header__title">Good morning, Sameer</h1>
+          <h1 className="header__title">Good morning, {getDisplayName(user)}</h1>
         </div>
       </div>
 
@@ -38,7 +42,7 @@ function Header({ onMenuClick }) {
         <div className="header__divider" />
 
         <button type="button" className="header__profile" aria-label="Open profile menu">
-          <span className="header__avatar">SS</span>
+          <span className="header__avatar">{getInitials(user)}</span>
         </button>
       </div>
     </header>
