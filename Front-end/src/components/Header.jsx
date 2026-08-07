@@ -1,0 +1,48 @@
+import { IconMenu, IconSearch, IconBell, IconPlus } from './icons'
+import './Header.css'
+
+function Header({ onMenuClick }) {
+  return (
+    <header className="header">
+      <div className="header__left">
+        <button
+          type="button"
+          className="header__menu-btn"
+          onClick={onMenuClick}
+          aria-label="Toggle menu"
+        >
+          <IconMenu className="icon" />
+        </button>
+        <div className="header__heading">
+          <p className="header__eyebrow">Dashboard</p>
+          <h1 className="header__title">Good morning, Sameer</h1>
+        </div>
+      </div>
+
+      <div className="header__right">
+        <label className="header__search">
+          <IconSearch className="icon" />
+          <input type="search" placeholder="Search events, attendees..." />
+        </label>
+
+        <button type="button" className="header__cta">
+          <IconPlus className="icon" />
+          <span>New event</span>
+        </button>
+
+        <button type="button" className="header__icon-btn" aria-label="Notifications">
+          <IconBell className="icon" />
+          <span className="header__dot" />
+        </button>
+
+        <div className="header__divider" />
+
+        <button type="button" className="header__profile" aria-label="Open profile menu">
+          <span className="header__avatar">SS</span>
+        </button>
+      </div>
+    </header>
+  )
+}
+
+export default Header
