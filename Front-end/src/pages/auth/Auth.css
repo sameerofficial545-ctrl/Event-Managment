@@ -15,6 +15,17 @@
   line-height: 1.4;
 }
 
+.auth-form__success {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(52, 199, 89, 0.12);
+  border: 1px solid rgba(52, 199, 89, 0.35);
+  color: #34c759;
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
 .auth-form__row {
   display: grid;
   grid-template-columns: 1fr 1fr;

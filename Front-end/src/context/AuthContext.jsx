@@ -32,10 +32,10 @@ export function AuthProvider({ children }) {
   }
 
   const register = async (payload) => {
+    // Deliberately doesn't store the token/log the user in - registration
+    // hands back to the login page so the user enters their credentials
+    // themselves, rather than silently starting an authenticated session.
     const { data } = await api.post('/auth/register/', payload)
-    localStorage.setItem(TOKEN_KEY, data.token)
-    setToken(data.token)
-    setUser(data.user)
     return data.user
   }
 

@@ -4,6 +4,7 @@ import { parseApiError } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import AuthLayout from './AuthLayout'
 import FormField from './FormField'
+import { isValidEmail } from './validators'
 import './Auth.css'
 
 const INITIAL_FORM = {
@@ -30,20 +31,34 @@ function Register() {
     setFieldErrors((prev) => ({ ...prev, [name]: undefined }))
   }
 
+  const handleEmailBlur = () => {
+    if (form.email && !isValidEmail(form.email)) {
+      setFieldErrors((prev) => ({ ...prev, email: 'Enter a valid email address.' }))
+    }
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
     setGeneralError('')
 
+    const validationErrors = {}
+    if (!isValidEmail(form.email)) {
+      validationErrors.email = 'Enter a valid email address.'
+    }
     if (form.password !== form.password2) {
-      setFieldErrors((prev) => ({ ...prev, password2: 'Passwords do not match.' }))
+      validationErrors.password2 = 'Passwords do not match.'
+    }
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors)
       return
     }
+
     setFieldErrors({})
     setSubmitting(true)
 
     try {
       await register(form)
-      navigate('/', { replace: true })
+      navigate('/login', { replace: true, state: { registered: true, username: form.username } })
     } catch (error) {
       const parsed = parseApiError(error)
       setFieldErrors(parsed.fieldErrors)
@@ -104,6 +119,7 @@ function Register() {
           type="email"
           value={form.email}
           onChange={handleChange}
+          onBlur={handleEmailBlur}
           error={fieldErrors.email}
           autoComplete="email"
           required

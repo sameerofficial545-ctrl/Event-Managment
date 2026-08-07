@@ -14,7 +14,10 @@ function Login() {
   const location = useLocation()
   const redirectTo = location.state?.from || '/'
 
-  const [form, setForm] = useState(INITIAL_FORM)
+  const [form, setForm] = useState({
+    ...INITIAL_FORM,
+    username: location.state?.username || '',
+  })
   const [fieldErrors, setFieldErrors] = useState({})
   const [generalError, setGeneralError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -54,6 +57,11 @@ function Login() {
       }
     >
       <form className="auth-form" onSubmit={handleSubmit} noValidate>
+        {location.state?.registered && !generalError && (
+          <p className="auth-form__success" role="status">
+            Account created. Log in to continue.
+          </p>
+        )}
         {generalError && (
           <p className="auth-form__error" role="alert">
             {generalError}
