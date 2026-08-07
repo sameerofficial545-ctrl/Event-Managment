@@ -239,6 +239,99 @@
       }
     },
     {
+      "name": "Admin login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('is a staff account', () => pm.expect(body.user.is_staff).to.eql(true));",
+              "pm.collectionVariables.set('adminToken', body.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{adminUsername}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/login/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login", ""] }
+      }
+    },
+    {
+      "name": "Admin - list users without token -> 401",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 401', () => pm.response.to.have.status(401));",
+              "const body = pm.response.json();",
+              "pm.test('error code is not_authenticated', () => pm.expect(body.error.code).to.eql('not_authenticated'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/auth/users/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "users", ""] }
+      }
+    },
+    {
+      "name": "Admin - list users as regular user -> 403",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 403', () => pm.response.to.have.status(403));",
+              "const body = pm.response.json();",
+              "pm.test('error code is permission_denied', () => pm.expect(body.error.code).to.eql('permission_denied'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/api/auth/users/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "users", ""] }
+      }
+    },
+    {
+      "name": "Admin - list users as admin -> 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('returns an array of users', () => pm.expect(body).to.be.an('array'));",
+              "pm.test('includes the just-registered test user', () => {",
+              "  const usernames = body.map((u) => u.username);",
+              "  pm.expect(usernames).to.include(pm.collectionVariables.get('testUsername'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Token {{adminToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/auth/users/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "users", ""] }
+      }
+    },
+    {
       "name": "Password reset - request for registered email -> 200",
       "event": [
         {
@@ -381,6 +474,7 @@
   ],
   "variable": [
     { "key": "testUsername", "value": "" },
-    { "key": "token", "value": "" }
+    { "key": "token", "value": "" },
+    { "key": "adminToken", "value": "" }
   ]
 }
