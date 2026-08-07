@@ -12,7 +12,6 @@ function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const redirectTo = location.state?.from || '/'
 
   const [form, setForm] = useState({
     ...INITIAL_FORM,
@@ -35,8 +34,12 @@ function Login() {
     setFieldErrors({})
 
     try {
-      await login(form)
-      navigate(redirectTo, { replace: true })
+      const loggedInUser = await login(form)
+      // Admins land on /admin by default; everyone else on the regular
+      // dashboard - unless they were bounced here from a specific page,
+      // in which case send them back to it.
+      const target = location.state?.from || (loggedInUser.is_staff ? '/admin' : '/')
+      navigate(target, { replace: true })
     } catch (error) {
       const parsed = parseApiError(error)
       setFieldErrors(parsed.fieldErrors)

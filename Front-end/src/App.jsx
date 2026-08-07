@@ -1,59 +1,54 @@
-import { useState } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
-import Sidebar from './components/Sidebar'
-import Header from './components/Header'
-import Footer from './components/Footer'
+import AppShell from './components/AppShell'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
+import AdminDashboard from './pages/admin/AdminDashboard'
 import './App.css'
 
 function Dashboard() {
-  const [menuOpen, setMenuOpen] = useState(false)
-
   return (
-    <div className="app-shell">
-      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
-
-      <div className="app-shell__main">
-        <Header onMenuClick={() => setMenuOpen((v) => !v)} />
-
-        <main className="app-content">
-          <section className="page-intro">
-            <span className="page-intro__eyebrow">Welcome back</span>
-            <h2 className="page-intro__title">Your events, beautifully organized</h2>
-            <p className="page-intro__text">
-              This layout is powered by the new <code>Sidebar</code>, <code>Header</code> and{' '}
-              <code>Footer</code> components — plug in your dashboard content here.
-            </p>
-          </section>
-        </main>
-
-        <Footer />
-      </div>
-    </div>
+    <AppShell>
+      <section className="page-intro">
+        <span className="page-intro__eyebrow">Welcome back</span>
+        <h2 className="page-intro__title">Your events, beautifully organized</h2>
+        <p className="page-intro__text">
+          This layout is powered by the new <code>Sidebar</code>, <code>Header</code> and{' '}
+          <code>Footer</code> components — plug in your dashboard content here.
+        </p>
+      </section>
+    </AppShell>
   )
 }
 
 function App() {
-  const { initializing, isAuthenticated } = useAuth()
+  const { initializing, isAuthenticated, isAdmin } = useAuth()
 
   if (initializing) {
     return <div className="app-loading">Loading…</div>
   }
 
+  const homeRoute = isAdmin ? '/admin' : '/'
+
   return (
     <Routes>
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
+      <Route
+        path="/login"
+        element={isAuthenticated ? <Navigate to={homeRoute} replace /> : <Login />}
+      />
       <Route
         path="/register"
-        element={isAuthenticated ? <Navigate to="/" replace /> : <Register />}
+        element={isAuthenticated ? <Navigate to={homeRoute} replace /> : <Register />}
       />
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<Dashboard />} />
       </Route>
-      <Route path="*" element={<Navigate to={isAuthenticated ? '/' : '/login'} replace />} />
+      <Route element={<AdminRoute />}>
+        <Route path="/admin" element={<AdminDashboard />} />
+      </Route>
+      <Route path="*" element={<Navigate to={isAuthenticated ? homeRoute : '/login'} replace />} />
     </Routes>
   )
 }

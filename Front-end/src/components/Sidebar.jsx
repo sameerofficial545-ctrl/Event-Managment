@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getDisplayName, getInitials } from '../utils/user'
 import {
@@ -13,17 +14,18 @@ import {
 } from './icons'
 import './Sidebar.css'
 
-const NAV_ITEMS = [
-  { label: 'Dashboard', icon: IconDashboard },
+const PLACEHOLDER_ITEMS = [
   { label: 'Events', icon: IconEvents, badge: 12 },
   { label: 'Calendar', icon: IconCalendar },
   { label: 'Attendees', icon: IconUsers },
   { label: 'Settings', icon: IconSettings },
 ]
 
+const navLinkClass = ({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
+
 function Sidebar({ open, onClose }) {
-  const [active, setActive] = useState('Dashboard')
-  const { user, logout } = useAuth()
+  const [active, setActive] = useState(null)
+  const { user, logout, isAdmin } = useAuth()
 
   return (
     <>
@@ -50,7 +52,13 @@ function Sidebar({ open, onClose }) {
         <nav className="sidebar__nav">
           <span className="sidebar__section-label">Main</span>
           <ul>
-            {NAV_ITEMS.map(({ label, icon: Icon, badge }) => (
+            <li>
+              <NavLink to="/" end className={navLinkClass}>
+                <IconDashboard className="icon" />
+                <span>Dashboard</span>
+              </NavLink>
+            </li>
+            {PLACEHOLDER_ITEMS.map(({ label, icon: Icon, badge }) => (
               <li key={label}>
                 <button
                   type="button"
@@ -64,6 +72,20 @@ function Sidebar({ open, onClose }) {
               </li>
             ))}
           </ul>
+
+          {isAdmin && (
+            <>
+              <span className="sidebar__section-label">Admin</span>
+              <ul>
+                <li>
+                  <NavLink to="/admin" className={navLinkClass}>
+                    <IconUsers className="icon" />
+                    <span>All users</span>
+                  </NavLink>
+                </li>
+              </ul>
+            </>
+          )}
         </nav>
 
         <div className="sidebar__footer">

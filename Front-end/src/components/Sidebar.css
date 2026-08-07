@@ -91,6 +91,7 @@
 
 .sidebar__link {
   width: 100%;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -104,6 +105,7 @@
   cursor: pointer;
   position: relative;
   text-align: left;
+  text-decoration: none;
   transition: background 0.18s, color 0.18s;
 }
 

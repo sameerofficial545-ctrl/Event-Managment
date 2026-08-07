@@ -49,6 +49,7 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       isAuthenticated: Boolean(token),
+      isAdmin: Boolean(user?.is_staff),
       initializing,
       login,
       register,
