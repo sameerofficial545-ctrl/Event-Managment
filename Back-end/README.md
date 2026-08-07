@@ -54,6 +54,44 @@ curl -X POST http://127.0.0.1:8000/api/auth/login/ \
 curl http://127.0.0.1:8000/api/auth/me/ -H "Authorization: Token <token>"
 ```
 
+## Error responses
+
+Every error - a validation failure, a bad auth token, an unmatched route, or
+an unexpected bug - comes back as the same JSON shape, so a client never has
+to guess what happened:
+
+```json
+{
+  "error": {
+    "status": 400,
+    "code": "bad_request",
+    "message": "One or more fields failed validation.",
+    "details": { "email": ["Enter a valid email address."] }
+  }
+}
+```
+
+- `status` - the HTTP status code.
+- `code` - a stable machine-readable slug (`not_authenticated`, `not_found`,
+  `method_not_allowed`, `internal_server_error`, ...).
+- `message` - a short human-readable summary.
+- `details` - the raw field-level errors when there are any (e.g. for
+  building inline form validation), otherwise `null`.
+
+This is enforced in two places:
+- `config/exceptions.py` (`REST_FRAMEWORK["EXCEPTION_HANDLER"]`) wraps every
+  exception raised inside a DRF view - both normal DRF exceptions
+  (`ValidationError`, `NotAuthenticated`, `PermissionDenied`, `NotFound`,
+  `MethodNotAllowed`, ...) and genuinely unexpected bugs, which are logged
+  server-side with a full traceback (`logger.error(..., exc_info=exc)`) and
+  returned to the client as a generic 500 - never a raw traceback.
+- `config/views.py` + `handler400/403/404/500` in `config/urls.py` cover
+  requests that never reach a DRF view at all (an unmatched URL, most
+  commonly) so even those return the same JSON envelope instead of Django's
+  default HTML error pages. These only take effect when `DEBUG=False`; with
+  `DEBUG=True` (the local default) Django's own debug pages take over for
+  that specific case so you still get full tracebacks while developing.
+
 ## Notes
 
 - User model: `users.User`, a custom model extending Django's `AbstractUser`
