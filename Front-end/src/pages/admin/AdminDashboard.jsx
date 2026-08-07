@@ -39,7 +39,7 @@ function AdminDashboard() {
       }}
     >
       <section className="page-intro">
-        <span className="page-intro__eyebrow">Admin area</span>
+        <span className="page-intro__eyebrow">Admin area 🛡️</span>
         <h2 className="page-intro__title">Registered users</h2>
         <p className="page-intro__text">
           Only visible to staff accounts. {users.length} account{users.length === 1 ? '' : 's'}{' '}

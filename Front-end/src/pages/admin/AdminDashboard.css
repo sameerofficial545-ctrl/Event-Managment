@@ -39,9 +39,13 @@
 
 .admin-table tbody tr {
   border-bottom: 1px solid var(--border);
+  transition: background 0.15s ease;
 }
 .admin-table tbody tr:last-child {
   border-bottom: none;
+}
+.admin-table tbody tr:hover {
+  background: var(--accent-bg);
 }
 .admin-table tbody td {
   color: var(--text-h);

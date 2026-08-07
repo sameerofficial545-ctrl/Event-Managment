@@ -51,7 +51,7 @@ function Login() {
 
   return (
     <AuthLayout
-      title="Welcome back"
+      title="Welcome back 👋"
       subtitle="Log in to manage your events."
       footer={
         <p>

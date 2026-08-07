@@ -10,16 +10,37 @@ import ResetPassword from './pages/auth/ResetPassword'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import './App.css'
 
+const STATS = [
+  { icon: '🎟️', label: 'Upcoming events', value: '12', delta: '+3 this month' },
+  { icon: '🧑‍🤝‍🧑', label: 'Total attendees', value: '1,284', delta: '+214 this week' },
+  { icon: '💜', label: 'Revenue', value: '$24.6K', delta: '+8.2%' },
+]
+
 function Dashboard() {
   return (
     <AppShell>
       <section className="page-intro">
-        <span className="page-intro__eyebrow">Welcome back</span>
-        <h2 className="page-intro__title">Your events, beautifully organized</h2>
+        <span className="page-intro__eyebrow">Welcome back 👋</span>
+        <h2 className="page-intro__title">Your events, beautifully organized 🎉</h2>
         <p className="page-intro__text">
           This layout is powered by the new <code>Sidebar</code>, <code>Header</code> and{' '}
           <code>Footer</code> components — plug in your dashboard content here.
         </p>
+      </section>
+
+      <section className="stat-grid">
+        {STATS.map((stat) => (
+          <div className="stat-tile" key={stat.label}>
+            <span className="stat-tile__icon" aria-hidden="true">
+              {stat.icon}
+            </span>
+            <div className="stat-tile__body">
+              <span className="stat-tile__label">{stat.label}</span>
+              <span className="stat-tile__value">{stat.value}</span>
+              <span className="stat-tile__delta">▲ {stat.delta}</span>
+            </div>
+          </div>
+        ))}
       </section>
     </AppShell>
   )

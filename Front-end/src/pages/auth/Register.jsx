@@ -70,7 +70,7 @@ function Register() {
 
   return (
     <AuthLayout
-      title="Create your account"
+      title="Create your account ✨"
       subtitle="Start planning events in minutes."
       footer={
         <p>

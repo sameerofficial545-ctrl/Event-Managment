@@ -37,7 +37,7 @@ function ForgotPassword() {
 
   return (
     <AuthLayout
-      title="Reset your password"
+      title="Reset your password 🔐"
       subtitle={submitted ? undefined : "Enter your account email and we'll send you a reset link."}
       footer={
         <p>

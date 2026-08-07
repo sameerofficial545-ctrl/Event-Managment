@@ -57,7 +57,7 @@ function ResetPassword() {
 
   if (succeeded) {
     return (
-      <AuthLayout title="Password reset" subtitle="Your password has been updated.">
+      <AuthLayout title="Password reset ✅" subtitle="Your password has been updated.">
         <p className="auth-form__success" role="status">
           You can now log in with your new password.
         </p>
@@ -74,7 +74,7 @@ function ResetPassword() {
 
   return (
     <AuthLayout
-      title="Choose a new password"
+      title="Choose a new password 🔑"
       subtitle="Enter a new password for your account."
       footer={
         <p>

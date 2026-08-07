@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getDisplayName, getInitials } from '../utils/user'
+import ParticleField from './ParticleField'
 import {
   IconSparkle,
   IconDashboard,
@@ -34,71 +35,79 @@ function Sidebar({ open, onClose }) {
         onClick={onClose}
       />
       <aside className={`sidebar ${open ? 'sidebar--open' : ''}`}>
-        <div className="sidebar__brand">
-          <span className="sidebar__brand-mark">
-            <IconSparkle className="icon" />
-          </span>
-          <span className="sidebar__brand-text">Eventify</span>
-          <button
-            type="button"
-            className="sidebar__close"
-            onClick={onClose}
-            aria-label="Close menu"
-          >
-            <IconX className="icon" />
-          </button>
-        </div>
-
-        <nav className="sidebar__nav">
-          <span className="sidebar__section-label">Main</span>
-          <ul>
-            <li>
-              <NavLink to="/" end className={navLinkClass}>
-                <IconDashboard className="icon" />
-                <span>Dashboard</span>
-              </NavLink>
-            </li>
-            {PLACEHOLDER_ITEMS.map(({ label, icon: Icon, badge }) => (
-              <li key={label}>
-                <button
-                  type="button"
-                  className={`sidebar__link ${active === label ? 'sidebar__link--active' : ''}`}
-                  onClick={() => setActive(label)}
-                >
-                  <Icon className="icon" />
-                  <span>{label}</span>
-                  {badge ? <span className="sidebar__badge">{badge}</span> : null}
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          {isAdmin && (
-            <>
-              <span className="sidebar__section-label">Admin</span>
-              <ul>
-                <li>
-                  <NavLink to="/admin" className={navLinkClass}>
-                    <IconUsers className="icon" />
-                    <span>All users</span>
-                  </NavLink>
-                </li>
-              </ul>
-            </>
-          )}
-        </nav>
-
-        <div className="sidebar__footer">
-          <div className="sidebar__user">
-            <span className="sidebar__avatar">{getInitials(user)}</span>
-            <div className="sidebar__user-info">
-              <strong>{getDisplayName(user)}</strong>
-              <small>{user?.email}</small>
-            </div>
+        <ParticleField variant="dark" density={35} />
+        <div className="sidebar__content">
+          <div className="sidebar__brand">
+            <span className="sidebar__brand-mark">
+              <IconSparkle className="icon" />
+            </span>
+            <span className="sidebar__brand-text">Eventify</span>
+            <button
+              type="button"
+              className="sidebar__close"
+              onClick={onClose}
+              aria-label="Close menu"
+            >
+              <IconX className="icon" />
+            </button>
           </div>
-          <button type="button" className="sidebar__logout" onClick={logout} aria-label="Log out">
-            <IconLogOut className="icon" />
-          </button>
+
+          <nav className="sidebar__nav">
+            <span className="sidebar__section-label">Main</span>
+            <ul>
+              <li>
+                <NavLink to="/" end className={navLinkClass}>
+                  <IconDashboard className="icon" />
+                  <span>Dashboard</span>
+                </NavLink>
+              </li>
+              {PLACEHOLDER_ITEMS.map(({ label, icon: Icon, badge }) => (
+                <li key={label}>
+                  <button
+                    type="button"
+                    className={`sidebar__link ${active === label ? 'sidebar__link--active' : ''}`}
+                    onClick={() => setActive(label)}
+                  >
+                    <Icon className="icon" />
+                    <span>{label}</span>
+                    {badge ? <span className="sidebar__badge">{badge}</span> : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {isAdmin && (
+              <>
+                <span className="sidebar__section-label">Admin</span>
+                <ul>
+                  <li>
+                    <NavLink to="/admin" className={navLinkClass}>
+                      <IconUsers className="icon" />
+                      <span>All users</span>
+                    </NavLink>
+                  </li>
+                </ul>
+              </>
+            )}
+          </nav>
+
+          <div className="sidebar__footer">
+            <div className="sidebar__user">
+              <span className="sidebar__avatar">{getInitials(user)}</span>
+              <div className="sidebar__user-info">
+                <strong>{getDisplayName(user)}</strong>
+                <small>{user?.email}</small>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="sidebar__logout"
+              onClick={logout}
+              aria-label="Log out"
+            >
+              <IconLogOut className="icon" />
+            </button>
+          </div>
         </div>
       </aside>
     </>

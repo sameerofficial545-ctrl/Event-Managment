@@ -1,20 +1,31 @@
 .auth-shell {
+  position: relative;
+  z-index: 1;
   display: flex;
   min-height: 100svh;
   width: 100%;
 }
 
 .auth-shell__brand {
+  position: relative;
   flex: 1;
   max-width: 480px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 44px 48px;
+  overflow: hidden;
   background:
     radial-gradient(1200px 500px at -10% -10%, rgba(170, 59, 255, 0.28), transparent 55%),
     linear-gradient(180deg, #14101c 0%, #1b1526 100%);
   color: #b9b1c9;
+}
+
+.auth-shell__brand-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 44px 48px;
 }
 
 .auth-shell__logo {
@@ -77,6 +88,23 @@
   align-items: center;
   justify-content: center;
   padding: 32px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .auth-card {
+    animation: auth-card-in 0.5s ease both;
+  }
+}
+
+@keyframes auth-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .auth-card {
