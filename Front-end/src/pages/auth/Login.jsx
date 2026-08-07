@@ -81,7 +81,14 @@ function Login() {
           required
         />
         <FormField
-          label="Password"
+          label={
+            <span className="form-field__label-row">
+              Password
+              <Link to="/forgot-password" className="auth-form__inline-link" tabIndex={-1}>
+                Forgot password?
+              </Link>
+            </span>
+          }
           name="password"
           type="password"
           value={form.password}

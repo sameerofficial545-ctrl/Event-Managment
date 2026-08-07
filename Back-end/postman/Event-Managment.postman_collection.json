@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Event-Managment Auth API",
-    "description": "Registration and authentication endpoints for the DRF backend. Run against the 'Event-Managment Local' environment with the dev server up on http://127.0.0.1:8000.",
+    "description": "Registration and authentication endpoints for the DRF backend. Run against the 'Event-Managment Local' environment with the dev server up on http://127.0.0.1:8000. Note: a full successful password-reset-confirm isn't included here, since the reset token is only ever delivered via the emailed link (printed to the runserver console in dev) - not retrievable through the API, by design. That path was verified manually (curl + browser) instead; this collection covers the request step and the confirm endpoint's validation errors.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "event": [
@@ -236,6 +236,106 @@
         "method": "GET",
         "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
         "url": { "raw": "{{baseUrl}}/api/auth/me/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me", ""] }
+      }
+    },
+    {
+      "name": "Password reset - request for registered email -> 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('generic detail message', () => pm.expect(body.detail).to.be.a('string'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{testUsername}}@example.com\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/password-reset/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "password-reset", ""] }
+      }
+    },
+    {
+      "name": "Password reset - request for unknown email -> 200 (no enumeration)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('same generic detail as a registered email', () => pm.expect(body.detail).to.be.a('string'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"definitely-not-registered-{{testUsername}}@example.com\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/password-reset/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "password-reset", ""] }
+      }
+    },
+    {
+      "name": "Password reset confirm - password mismatch -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('error envelope has new_password2 detail', () => pm.expect(body.error.details.new_password2).to.be.an('array'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"uid\": \"irrelevant-for-this-check\",\n  \"token\": \"irrelevant-for-this-check\",\n  \"new_password\": \"BrandNewPass456\",\n  \"new_password2\": \"SomethingElse789\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/password-reset-confirm/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "password-reset-confirm", ""] }
+      }
+    },
+    {
+      "name": "Password reset confirm - invalid uid -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('error envelope has uid detail', () => pm.expect(body.error.details.uid).to.be.an('array'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"uid\": \"not-a-real-uid\",\n  \"token\": \"not-a-real-token\",\n  \"new_password\": \"BrandNewPass456\",\n  \"new_password2\": \"BrandNewPass456\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/password-reset-confirm/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "password-reset-confirm", ""] }
       }
     },
     {

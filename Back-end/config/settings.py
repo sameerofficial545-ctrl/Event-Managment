@@ -163,10 +163,16 @@ CORS_ALLOWED_ORIGINS = os.environ.get(
 
 
 # Email
-# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
+# https://docs.djangoproject.com/en/5.2/topics/email/
+# Defaults to printing emails to the console - there's no real SMTP server
+# in dev. Point DJANGO_EMAIL_BACKEND/EMAIL_HOST etc at a real provider for
+# production.
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
+EMAIL_BACKEND = os.environ.get(
+    'DJANGO_EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend'
+)
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@eventify.local')
+
+# Base URL of the frontend, used to build links (e.g. password reset) that
+# get emailed to users.
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')

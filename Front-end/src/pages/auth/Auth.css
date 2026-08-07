@@ -32,6 +32,23 @@
   gap: 14px;
 }
 
+.form-field__label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.auth-form__inline-link {
+  font-weight: 500;
+  font-size: 12.5px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.auth-form__inline-link:hover {
+  text-decoration: underline;
+}
+
 .form-field {
   display: flex;
   flex-direction: column;
@@ -39,6 +56,7 @@
 }
 
 .form-field__label {
+  display: block;
   font-size: 13px;
   font-weight: 600;
   color: var(--text-h);

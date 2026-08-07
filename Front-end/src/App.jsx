@@ -5,6 +5,8 @@ import AdminRoute from './components/AdminRoute'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
+import ForgotPassword from './pages/auth/ForgotPassword'
+import ResetPassword from './pages/auth/ResetPassword'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import './App.css'
 
@@ -41,6 +43,14 @@ function App() {
       <Route
         path="/register"
         element={isAuthenticated ? <Navigate to={homeRoute} replace /> : <Register />}
+      />
+      <Route
+        path="/forgot-password"
+        element={isAuthenticated ? <Navigate to={homeRoute} replace /> : <ForgotPassword />}
+      />
+      <Route
+        path="/reset-password/:uid/:token"
+        element={isAuthenticated ? <Navigate to={homeRoute} replace /> : <ResetPassword />}
       />
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<Dashboard />} />

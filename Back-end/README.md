@@ -20,11 +20,14 @@ allowed hosts, CORS origins) for your environment.
 
 ## Auth endpoints
 
-| Method | Endpoint              | Auth required | Description                          |
-|--------|------------------------|:--------------:|--------------------------------------|
-| POST   | `/api/auth/register/`  | No             | Create an account, returns a token   |
-| POST   | `/api/auth/login/`     | No             | Authenticate, returns a token        |
-| GET    | `/api/auth/me/`        | Yes            | Return the current user's profile    |
+| Method | Endpoint                          | Auth required | Description                                |
+|--------|-------------------------------------|:--------------:|---------------------------------------------|
+| POST   | `/api/auth/register/`               | No             | Create an account, returns a token           |
+| POST   | `/api/auth/login/`                  | No             | Authenticate, returns a token                |
+| GET    | `/api/auth/me/`                     | Yes            | Return the current user's profile            |
+| GET    | `/api/auth/users/`                  | Yes (staff)    | List all users (admin only)                  |
+| POST   | `/api/auth/password-reset/`         | No             | Email a password reset link                  |
+| POST   | `/api/auth/password-reset-confirm/` | No             | Set a new password using that link's uid/token |
 
 Authenticated requests send the token in the `Authorization` header:
 
@@ -53,6 +56,33 @@ curl -X POST http://127.0.0.1:8000/api/auth/login/ \
 ```bash
 curl http://127.0.0.1:8000/api/auth/me/ -H "Authorization: Token <token>"
 ```
+
+### Password reset
+
+```bash
+# 1. Request a reset - always returns the same response, whether or not
+#    the email is registered (avoids leaking which addresses have accounts)
+curl -X POST http://127.0.0.1:8000/api/auth/password-reset/ \
+  -H "Content-Type: application/json" \
+  -d '{"email":"jane@example.com"}'
+
+# 2. In dev, EMAIL_BACKEND defaults to the console backend, so the email
+#    (with a link like FRONTEND_URL/reset-password/<uid>/<token>/) is
+#    printed to the runserver output rather than actually sent. Point
+#    DJANGO_EMAIL_BACKEND/EMAIL_HOST at a real provider for production.
+
+# 3. Confirm with the uid/token from that link
+curl -X POST http://127.0.0.1:8000/api/auth/password-reset-confirm/ \
+  -H "Content-Type: application/json" \
+  -d '{"uid":"<uid>","token":"<token>","new_password":"a-new-strong-password","new_password2":"a-new-strong-password"}'
+```
+
+The reset token is single-use (it's derived from the user's password hash
+via Django's `PasswordResetTokenGenerator`, so it stops validating the
+moment the password changes) and expires after `PASSWORD_RESET_TIMEOUT`
+(Django's default: 3 days). Confirming a reset also revokes the user's
+existing auth token, so any other logged-in session has to sign in again
+with the new password.
 
 ## Postman collection
 
