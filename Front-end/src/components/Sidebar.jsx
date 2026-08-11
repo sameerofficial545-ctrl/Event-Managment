@@ -16,7 +16,6 @@ import {
 import './Sidebar.css'
 
 const PLACEHOLDER_ITEMS = [
-  { label: 'Events', icon: IconEvents, badge: 12 },
   { label: 'Calendar', icon: IconCalendar },
   { label: 'Attendees', icon: IconUsers },
   { label: 'Settings', icon: IconSettings },
@@ -59,6 +58,12 @@ function Sidebar({ open, onClose }) {
                 <NavLink to="/" end className={navLinkClass}>
                   <IconDashboard className="icon" />
                   <span>Dashboard</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/events" className={navLinkClass}>
+                  <IconEvents className="icon" />
+                  <span>Events</span>
                 </NavLink>
               </li>
               {PLACEHOLDER_ITEMS.map(({ label, icon: Icon, badge }) => (

@@ -8,6 +8,7 @@ import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import ResetPassword from './pages/auth/ResetPassword'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import EventsPage from './pages/events/EventsPage'
 import './App.css'
 
 const STATS = [
@@ -75,6 +76,7 @@ function App() {
       />
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/events" element={<EventsPage />} />
       </Route>
       <Route element={<AdminRoute />}>
         <Route path="/admin" element={<AdminDashboard />} />

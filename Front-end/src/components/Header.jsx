@@ -10,6 +10,7 @@ function Header({
   searchPlaceholder = 'Search events, attendees...',
   ctaLabel = 'New event',
   showCta = true,
+  onCtaClick,
 }) {
   const { user } = useAuth()
 
@@ -37,7 +38,7 @@ function Header({
         </label>
 
         {showCta && (
-          <button type="button" className="header__cta">
+          <button type="button" className="header__cta" onClick={onCtaClick}>
             <IconPlus className="icon" />
             <span>{ctaLabel}</span>
           </button>

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { parseApiError } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import AuthLayout from './AuthLayout'
-import FormField from './FormField'
+import FormField from '../../components/FormField'
 import './Auth.css'
 
 const INITIAL_FORM = { username: '', password: '' }

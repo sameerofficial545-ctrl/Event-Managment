@@ -332,6 +332,241 @@
       }
     },
     {
+      "name": "Events - create -> 201",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('returns the created event', () => pm.expect(body.title).to.eql('Postman Test Event'));",
+              "pm.test('organizer is the logged-in user', () => pm.expect(body.organizer).to.eql(pm.collectionVariables.get('testUsername')));",
+              "pm.collectionVariables.set('eventId', body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Token {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Postman Test Event\",\n  \"location\": \"Conference Room\",\n  \"start_time\": \"2027-01-10T09:00:00Z\",\n  \"end_time\": \"2027-01-10T10:00:00Z\",\n  \"description\": \"Created by the Postman collection\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/events/", "host": ["{{baseUrl}}"], "path": ["api", "events", ""] }
+      }
+    },
+    {
+      "name": "Events - list includes the created event -> 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('includes the created event id', () => {",
+              "  const ids = body.map((e) => e.id);",
+              "  pm.expect(ids).to.include(pm.collectionVariables.get('eventId'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/api/events/", "host": ["{{baseUrl}}"], "path": ["api", "events", ""] }
+      }
+    },
+    {
+      "name": "Events - retrieve -> 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('title matches', () => pm.expect(body.title).to.eql('Postman Test Event'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", ""] }
+      }
+    },
+    {
+      "name": "Events - update (PATCH) -> 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('title was updated', () => pm.expect(body.title).to.eql('Postman Test Event (Updated)'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Token {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Postman Test Event (Updated)\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", ""] }
+      }
+    },
+    {
+      "name": "Events - validation: end before start -> 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 400', () => pm.response.to.have.status(400));",
+              "const body = pm.response.json();",
+              "pm.test('error envelope has end_time detail', () => pm.expect(body.error.details.end_time).to.be.an('array'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Token {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Bad Event\",\n  \"start_time\": \"2027-01-10T10:00:00Z\",\n  \"end_time\": \"2027-01-10T09:00:00Z\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/events/", "host": ["{{baseUrl}}"], "path": ["api", "events", ""] }
+      }
+    },
+    {
+      "name": "Events - without token -> 401",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 401', () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/api/events/", "host": ["{{baseUrl}}"], "path": ["api", "events", ""] }
+      }
+    },
+    {
+      "name": "Events - another user cannot see or fetch it -> empty list, 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('list does not include the other user\\'s event', () => {",
+              "  const body = pm.response.json();",
+              "  const ids = body.map((e) => e.id);",
+              "  pm.expect(ids).to.not.include(pm.collectionVariables.get('eventId'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Token {{adminToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/events/", "host": ["{{baseUrl}}"], "path": ["api", "events", ""] }
+      }
+    },
+    {
+      "name": "Events - another user fetching it directly -> 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 404 (not 403 - existence is not leaked)', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Token {{adminToken}}" }],
+        "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", ""] }
+      }
+    },
+    {
+      "name": "Events - delete -> 204",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 204', () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", ""] }
+      }
+    },
+    {
+      "name": "Events - list is empty again after delete -> 200",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('deleted event no longer listed', () => {",
+              "  const ids = body.map((e) => e.id);",
+              "  pm.expect(ids).to.not.include(pm.collectionVariables.get('eventId'));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/api/events/", "host": ["{{baseUrl}}"], "path": ["api", "events", ""] }
+      }
+    },
+    {
       "name": "Password reset - request for registered email -> 200",
       "event": [
         {
@@ -475,6 +710,7 @@
   "variable": [
     { "key": "testUsername", "value": "" },
     { "key": "token", "value": "" },
-    { "key": "adminToken", "value": "" }
+    { "key": "adminToken", "value": "" },
+    { "key": "eventId", "value": "" }
   ]
 }

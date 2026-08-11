@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { parseApiError } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import AuthLayout from './AuthLayout'
-import FormField from './FormField'
+import FormField from '../../components/FormField'
 import { isValidEmail } from './validators'
 import './Auth.css'
 

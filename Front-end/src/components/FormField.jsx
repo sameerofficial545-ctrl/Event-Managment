@@ -1,11 +1,15 @@
-function FormField({ label, name, error, ...inputProps }) {
+import './FormField.css'
+
+function FormField({ label, name, error, as = 'input', ...inputProps }) {
+  const Tag = as === 'textarea' ? 'textarea' : 'input'
+
   return (
     <label className="form-field" htmlFor={name}>
       <span className="form-field__label">{label}</span>
-      <input
+      <Tag
         id={name}
         name={name}
-        className={`form-field__input ${error ? 'form-field__input--error' : ''}`}
+        className={`form-field__input ${as === 'textarea' ? 'form-field__input--textarea' : ''} ${error ? 'form-field__input--error' : ''}`}
         aria-invalid={Boolean(error)}
         {...inputProps}
       />

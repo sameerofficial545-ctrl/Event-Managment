@@ -22,6 +22,7 @@ from . import views as error_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('users.urls')),
+    path('api/events/', include('events.urls')),
 ]
 
 handler400 = error_views.bad_request

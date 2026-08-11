@@ -1,7 +1,7 @@
 # Event-Managment Backend
 
-Django + Django REST Framework API. Currently provides user registration and
-token-based authentication.
+Django + Django REST Framework API. Provides user registration and
+token-based authentication, plus CRUD for events.
 
 ## Setup
 
@@ -28,6 +28,22 @@ allowed hosts, CORS origins) for your environment.
 | GET    | `/api/auth/users/`                  | Yes (staff)    | List all users (admin only)                  |
 | POST   | `/api/auth/password-reset/`         | No             | Email a password reset link                  |
 | POST   | `/api/auth/password-reset-confirm/` | No             | Set a new password using that link's uid/token |
+
+## Event endpoints
+
+| Method | Endpoint              | Auth required | Description                          |
+|--------|------------------------|:--------------:|--------------------------------------|
+| GET    | `/api/events/`          | Yes            | List the current user's own events   |
+| POST   | `/api/events/`          | Yes            | Create an event (organizer = you)    |
+| GET    | `/api/events/<id>/`     | Yes            | Retrieve one of your own events      |
+| PATCH  | `/api/events/<id>/`     | Yes            | Partially update one of your events  |
+| PUT    | `/api/events/<id>/`     | Yes            | Replace one of your events           |
+| DELETE | `/api/events/<id>/`     | Yes            | Delete one of your events            |
+
+Each user only ever sees and manages their own events - the list and detail
+endpoints are scoped by `organizer=request.user`, so a request for another
+user's event ID returns `404` rather than `403` (it doesn't reveal that the
+event exists at all). `end_time`, if given, must be after `start_time`.
 
 Authenticated requests send the token in the `Authorization` header:
 

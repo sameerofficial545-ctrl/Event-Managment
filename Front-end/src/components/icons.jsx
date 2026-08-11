@@ -120,3 +120,31 @@ export const IconPlus = (props) => (
     <path d="M12 5v14M5 12h14" />
   </svg>
 )
+
+export const IconPencil = (props) => (
+  <svg {...base} {...props}>
+    <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    <path d="M14.5 5.5l4 4" />
+  </svg>
+)
+
+export const IconTrash = (props) => (
+  <svg {...base} {...props}>
+    <path d="M4 7h16M9 7V4.8c0-.7.6-1.3 1.3-1.3h3.4c.7 0 1.3.6 1.3 1.3V7M18.5 7l-.7 12.2c-.05.95-.84 1.7-1.8 1.7H8c-.96 0-1.75-.75-1.8-1.7L5.5 7" />
+    <path d="M10 11v6M14 11v6" />
+  </svg>
+)
+
+export const IconClock = (props) => (
+  <svg {...base} {...props}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5V12l3 2" />
+  </svg>
+)
+
+export const IconMapPin = (props) => (
+  <svg {...base} {...props}>
+    <path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21Z" />
+    <circle cx="12" cy="9.5" r="2.3" />
+  </svg>
+)

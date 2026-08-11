@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import api, { parseApiError } from '../../api/client'
 import AuthLayout from './AuthLayout'
-import FormField from './FormField'
+import FormField from '../../components/FormField'
 import './Auth.css'
 
 const INITIAL_FORM = { new_password: '', new_password2: '' }

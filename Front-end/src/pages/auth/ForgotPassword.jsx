@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import api, { parseApiError } from '../../api/client'
 import AuthLayout from './AuthLayout'
-import FormField from './FormField'
+import FormField from '../../components/FormField'
 import './Auth.css'
 
 function ForgotPassword() {
