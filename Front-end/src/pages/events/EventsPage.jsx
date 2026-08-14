@@ -1,9 +1,16 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import api, { parseApiError } from '../../api/client'
 import AppShell from '../../components/AppShell'
+import EventFilters, { DEFAULT_FILTERS } from './EventFilters'
 import EventForm from './EventForm'
 import EventList from './EventList'
 import './Events.css'
+
+function toLocalDateKey(isoString) {
+  const date = new Date(isoString)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
 
 function EventsPage() {
   const [events, setEvents] = useState([])
@@ -11,6 +18,7 @@ function EventsPage() {
   const [error, setError] = useState('')
   const [view, setView] = useState('list') // 'list' | 'form'
   const [editingEvent, setEditingEvent] = useState(null)
+  const [filters, setFilters] = useState(DEFAULT_FILTERS)
 
   const loadEvents = useCallback(() => {
     setLoading(true)
@@ -25,6 +33,21 @@ function EventsPage() {
   useEffect(() => {
     loadEvents()
   }, [loadEvents])
+
+  const filteredEvents = useMemo(() => {
+    const now = new Date()
+    return events.filter((event) => {
+      const start = new Date(event.start_time)
+      if (filters.range === 'upcoming' && start < now) return false
+      if (filters.range === 'past' && start >= now) return false
+      if (filters.date && toLocalDateKey(event.start_time) !== filters.date) return false
+      if (filters.location.trim()) {
+        const needle = filters.location.trim().toLowerCase()
+        if (!event.location?.toLowerCase().includes(needle)) return false
+      }
+      return true
+    })
+  }, [events, filters])
 
   const handleCreateClick = () => {
     setEditingEvent(null)
@@ -57,6 +80,8 @@ function EventsPage() {
     }
   }
 
+  const hasNoMatches = !loading && events.length > 0 && filteredEvents.length === 0
+
   return (
     <AppShell
       headerProps={{
@@ -81,11 +106,27 @@ function EventsPage() {
 
           {error && <p className="events-error">{error}</p>}
 
+          {!loading && events.length > 0 && (
+            <EventFilters filters={filters} onChange={setFilters} />
+          )}
+
           {loading ? (
             <p className="events-status">Loading events…</p>
+          ) : hasNoMatches ? (
+            <div className="event-empty">
+              <h3>No events match your filters</h3>
+              <p>Try a different date, location, or time range.</p>
+              <button
+                type="button"
+                className="event-form__cancel"
+                onClick={() => setFilters(DEFAULT_FILTERS)}
+              >
+                Clear filters
+              </button>
+            </div>
           ) : (
             <EventList
-              events={events}
+              events={filteredEvents}
               onEdit={handleEditClick}
               onDelete={handleDelete}
               onCreate={handleCreateClick}
