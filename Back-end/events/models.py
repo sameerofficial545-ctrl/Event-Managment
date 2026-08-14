@@ -21,3 +21,33 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class RSVP(models.Model):
+    GOING = 'going'
+    MAYBE = 'maybe'
+    NOT_GOING = 'not_going'
+    STATUS_CHOICES = [
+        (GOING, 'Going'),
+        (MAYBE, 'Maybe'),
+        (NOT_GOING, 'Not going'),
+    ]
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='rsvps')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='rsvps',
+    )
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default=GOING)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['event', 'user'], name='one_rsvp_per_user_per_event')
+        ]
+
+    def __str__(self):
+        return f'{self.user} -> {self.event} ({self.status})'

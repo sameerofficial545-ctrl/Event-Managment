@@ -31,19 +31,32 @@ allowed hosts, CORS origins) for your environment.
 
 ## Event endpoints
 
-| Method | Endpoint              | Auth required | Description                          |
-|--------|------------------------|:--------------:|--------------------------------------|
-| GET    | `/api/events/`          | Yes            | List the current user's own events   |
-| POST   | `/api/events/`          | Yes            | Create an event (organizer = you)    |
-| GET    | `/api/events/<id>/`     | Yes            | Retrieve one of your own events      |
-| PATCH  | `/api/events/<id>/`     | Yes            | Partially update one of your events  |
-| PUT    | `/api/events/<id>/`     | Yes            | Replace one of your events           |
-| DELETE | `/api/events/<id>/`     | Yes            | Delete one of your events            |
+| Method | Endpoint              | Auth required | Description                                    |
+|--------|------------------------|:--------------:|-------------------------------------------------|
+| GET    | `/api/events/`          | Yes            | List every event (from any user)                |
+| POST   | `/api/events/`          | Yes            | Create an event (organizer = you)                |
+| GET    | `/api/events/<id>/`     | Yes            | Retrieve any event                               |
+| PATCH  | `/api/events/<id>/`     | Yes (organizer) | Partially update - organizer only, else `403`   |
+| PUT    | `/api/events/<id>/`     | Yes (organizer) | Replace - organizer only, else `403`            |
+| DELETE | `/api/events/<id>/`     | Yes (organizer) | Delete - organizer only, else `403`             |
 
-Each user only ever sees and manages their own events - the list and detail
-endpoints are scoped by `organizer=request.user`, so a request for another
-user's event ID returns `404` rather than `403` (it doesn't reveal that the
-event exists at all). `end_time`, if given, must be after `start_time`.
+Every event is visible to every authenticated user (so people can find and
+RSVP to events they didn't create), but only the organizer can edit or delete
+their own - enforced by `IsOrganizerOrReadOnly` at the object-permission
+level. Each event's serialized data includes `is_mine` (whether the
+requesting user is the organizer) so a client can decide what controls to
+show without comparing usernames itself. `end_time`, if given, must be after
+`start_time`.
+
+### RSVPs
+
+Nested under an event, per DRF's nested-resource convention:
+
+| Method | Endpoint                          | Auth required | Description                                  |
+|--------|-------------------------------------|:--------------:|-----------------------------------------------|
+| GET    | `/api/events/<event_id>/rsvps/`     | Yes            | The organizer sees everyone's RSVP; anyone else sees only their own |
+| POST   | `/api/events/<event_id>/rsvps/`     | Yes            | RSVP as yourself (`status`: `going`/`maybe`/`not_going`) - an upsert, so RSVPing again just changes your existing response instead of erroring |
+| GET/PATCH/DELETE | `/api/events/<event_id>/rsvps/<id>/` | Yes | Check, change, or cancel your own RSVP - scoped to `user=request.user`, so this 404s for anyone else's RSVP, including the organizer |
 
 Authenticated requests send the token in the `Authorization` header:
 

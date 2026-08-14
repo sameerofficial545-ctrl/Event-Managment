@@ -1,4 +1,12 @@
-import { IconCalendar, IconClock, IconMapPin, IconPencil, IconPlus, IconTrash } from '../../components/icons'
+import {
+  IconCalendar,
+  IconClock,
+  IconMapPin,
+  IconPencil,
+  IconPlus,
+  IconTrash,
+  IconUsers,
+} from '../../components/icons'
 import './Events.css'
 
 function formatDateTime(iso) {
@@ -35,7 +43,7 @@ function EventList({ events, onEdit, onDelete, onCreate }) {
           <IconCalendar className="icon" />
         </span>
         <h3>No events yet</h3>
-        <p>Create your first event to start managing it here.</p>
+        <p>Be the first to create one - everyone will be able to see and RSVP to it.</p>
         <button type="button" className="event-form__submit" onClick={onCreate}>
           <IconPlus className="icon" />
           <span>New event</span>
@@ -50,27 +58,36 @@ function EventList({ events, onEdit, onDelete, onCreate }) {
         <article className="event-card" key={event.id}>
           <div className="event-card__head">
             <h3>{event.title}</h3>
-            <div className="event-card__actions">
-              <button
-                type="button"
-                onClick={() => onEdit(event)}
-                aria-label={`Edit ${event.title}`}
-              >
-                <IconPencil className="icon" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onDelete(event)}
-                aria-label={`Delete ${event.title}`}
-              >
-                <IconTrash className="icon" />
-              </button>
-            </div>
+            {event.is_mine ? (
+              <div className="event-card__actions">
+                <button
+                  type="button"
+                  onClick={() => onEdit(event)}
+                  aria-label={`Edit ${event.title}`}
+                >
+                  <IconPencil className="icon" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete(event)}
+                  aria-label={`Delete ${event.title}`}
+                >
+                  <IconTrash className="icon" />
+                </button>
+              </div>
+            ) : (
+              <span className="event-card__badge">Not yours</span>
+            )}
           </div>
 
           <p className="event-card__meta">
             <IconClock className="icon" />
             <span>{formatRange(event)}</span>
+          </p>
+
+          <p className="event-card__meta">
+            <IconUsers className="icon" />
+            <span>{event.is_mine ? 'Organized by you' : `Organized by ${event.organizer}`}</span>
           </p>
 
           {event.location && (

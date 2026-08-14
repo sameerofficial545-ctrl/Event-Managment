@@ -86,7 +86,7 @@ function EventsPage() {
     <AppShell
       headerProps={{
         eyebrow: 'Events',
-        title: view === 'form' ? (editingEvent ? 'Edit event' : 'New event') : 'Your events',
+        title: view === 'form' ? (editingEvent ? 'Edit event' : 'New event') : 'Events',
         searchPlaceholder: 'Search events...',
         showCta: view === 'list',
         onCtaClick: handleCreateClick,
@@ -98,9 +98,9 @@ function EventsPage() {
         <>
           <section className="page-intro">
             <span className="page-intro__eyebrow">Event management 🗓️</span>
-            <h2 className="page-intro__title">Your events</h2>
+            <h2 className="page-intro__title">Events</h2>
             <p className="page-intro__text">
-              Create, edit, and remove the events you're organizing.
+              Browse every event, and create, edit, or remove the ones you're organizing.
             </p>
           </section>
 
