@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import RSVP, Event
+from .models import RSVP, Event, Guest
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -44,3 +44,20 @@ class RSVPSerializer(serializers.ModelSerializer):
         model = RSVP
         fields = ['id', 'event', 'user', 'status', 'created_at', 'updated_at']
         read_only_fields = ['id', 'event', 'user', 'created_at', 'updated_at']
+
+
+class GuestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Guest
+        fields = ['id', 'event', 'name', 'email', 'status', 'notes', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'event', 'created_at', 'updated_at']
+
+    def validate(self, attrs):
+        event = self.context['event']
+        email = attrs.get('email', getattr(self.instance, 'email', None))
+        query = Guest.objects.filter(event=event, email__iexact=email)
+        if self.instance:
+            query = query.exclude(pk=self.instance.pk)
+        if query.exists():
+            raise serializers.ValidationError({'email': 'This guest is already on the list.'})
+        return attrs

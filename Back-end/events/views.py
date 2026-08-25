@@ -1,9 +1,10 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status, viewsets
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-from .models import RSVP, Event
-from .serializers import EventSerializer, RSVPSerializer
+from .models import RSVP, Event, Guest
+from .serializers import EventSerializer, GuestSerializer, RSVPSerializer
 
 
 class IsOrganizerOrReadOnly(permissions.BasePermission):
@@ -78,3 +79,53 @@ class EventRSVPDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return RSVP.objects.filter(event_id=self.kwargs['event_id'], user=self.request.user)
+
+
+class EventGuestListCreateView(generics.ListCreateAPIView):
+    """
+    Nested under /api/events/<event_id>/guests/.
+
+    The guest list is the organizer's private invite planning list, so
+    only the event's organizer may view or add to it.
+    """
+
+    serializer_class = GuestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_event(self):
+        event = get_object_or_404(Event, pk=self.kwargs['event_id'])
+        if event.organizer_id != self.request.user.id:
+            raise PermissionDenied("Only the event's organizer can manage its guest list.")
+        return event
+
+    def get_queryset(self):
+        return self.get_event().guests.all()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['event'] = self.get_event()
+        return context
+
+    def perform_create(self, serializer):
+        serializer.save(event=self.get_event())
+
+
+class EventGuestDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Nested under /api/events/<event_id>/guests/<pk>/, organizer-only."""
+
+    serializer_class = GuestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_event(self):
+        event = get_object_or_404(Event, pk=self.kwargs['event_id'])
+        if event.organizer_id != self.request.user.id:
+            raise PermissionDenied("Only the event's organizer can manage its guest list.")
+        return event
+
+    def get_queryset(self):
+        return Guest.objects.filter(event=self.get_event())
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['event'] = self.get_event()
+        return context

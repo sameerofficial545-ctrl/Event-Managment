@@ -51,3 +51,31 @@ class RSVP(models.Model):
 
     def __str__(self):
         return f'{self.user} -> {self.event} ({self.status})'
+
+
+class Guest(models.Model):
+    INVITED = 'invited'
+    CONFIRMED = 'confirmed'
+    DECLINED = 'declined'
+    STATUS_CHOICES = [
+        (INVITED, 'Invited'),
+        (CONFIRMED, 'Confirmed'),
+        (DECLINED, 'Declined'),
+    ]
+
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='guests')
+    name = models.CharField(max_length=150)
+    email = models.EmailField()
+    status = models.CharField(max_length=12, choices=STATUS_CHOICES, default=INVITED)
+    notes = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        constraints = [
+            models.UniqueConstraint(fields=['event', 'email'], name='one_guest_per_email_per_event')
+        ]
+
+    def __str__(self):
+        return f'{self.name} <{self.email}> -> {self.event}'
