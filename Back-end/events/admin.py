@@ -5,8 +5,8 @@ from .models import RSVP, Event, Guest
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ['title', 'organizer', 'start_time', 'end_time']
-    list_filter = ['organizer']
+    list_display = ['title', 'organizer', 'start_time', 'end_time', 'reminder_sent']
+    list_filter = ['organizer', 'reminder_sent']
     search_fields = ['title', 'location']
 
 
