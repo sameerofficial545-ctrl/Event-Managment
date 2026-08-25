@@ -9,10 +9,27 @@ const api = axios.create({ baseURL: BASE_URL })
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY)
   if (token) {
-    config.headers.Authorization = `Token ${token}`
+    config.headers.Authorization = `Bearer ${token}`
   }
   return config
 })
+
+// A 401 means the token is missing, expired, or its session was revoked
+// (e.g. logged out from another tab, or a password reset elsewhere) - drop
+// it locally too and send the user back to log in, rather than letting the
+// app sit in a half-authenticated state.
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401 && localStorage.getItem(TOKEN_KEY)) {
+      localStorage.removeItem(TOKEN_KEY)
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.assign('/login')
+      }
+    }
+    return Promise.reject(error)
+  },
+)
 
 // Turns the backend's { error: { message, details } } envelope into
 // something a form can render directly: field-level messages plus one

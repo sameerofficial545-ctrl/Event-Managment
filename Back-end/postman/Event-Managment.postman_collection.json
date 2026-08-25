@@ -234,7 +234,7 @@
       ],
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
         "url": { "raw": "{{baseUrl}}/api/auth/me/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me", ""] }
       }
     },
@@ -302,7 +302,7 @@
       ],
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
         "url": { "raw": "{{baseUrl}}/api/auth/users/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "users", ""] }
       }
     },
@@ -327,7 +327,7 @@
       ],
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Token {{adminToken}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
         "url": { "raw": "{{baseUrl}}/api/auth/users/", "host": ["{{baseUrl}}"], "path": ["api", "auth", "users", ""] }
       }
     },
@@ -352,7 +352,7 @@
         "method": "POST",
         "header": [
           { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Token {{token}}" }
+          { "key": "Authorization", "value": "Bearer {{token}}" }
         ],
         "body": {
           "mode": "raw",
@@ -381,7 +381,7 @@
       ],
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
         "url": { "raw": "{{baseUrl}}/api/events/", "host": ["{{baseUrl}}"], "path": ["api", "events", ""] }
       }
     },
@@ -402,7 +402,7 @@
       ],
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
         "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", ""] }
       }
     },
@@ -425,7 +425,7 @@
         "method": "PATCH",
         "header": [
           { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Token {{token}}" }
+          { "key": "Authorization", "value": "Bearer {{token}}" }
         ],
         "body": {
           "mode": "raw",
@@ -453,7 +453,7 @@
         "method": "POST",
         "header": [
           { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Token {{token}}" }
+          { "key": "Authorization", "value": "Bearer {{token}}" }
         ],
         "body": {
           "mode": "raw",
@@ -500,7 +500,7 @@
       ],
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Token {{adminToken}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
         "url": { "raw": "{{baseUrl}}/api/events/", "host": ["{{baseUrl}}"], "path": ["api", "events", ""] }
       }
     },
@@ -521,7 +521,7 @@
       ],
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Token {{adminToken}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
         "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", ""] }
       }
     },
@@ -542,7 +542,7 @@
         "method": "PATCH",
         "header": [
           { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Token {{adminToken}}" }
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
         ],
         "body": {
           "mode": "raw",
@@ -566,7 +566,7 @@
       ],
       "request": {
         "method": "DELETE",
-        "header": [{ "key": "Authorization", "value": "Token {{adminToken}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
         "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", ""] }
       }
     },
@@ -615,7 +615,7 @@
         "method": "POST",
         "header": [
           { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Token {{adminToken}}" }
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
         ],
         "body": { "mode": "raw", "raw": "{\n  \"status\": \"going\"\n}" },
         "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/rsvps/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", "rsvps", ""] }
@@ -641,7 +641,7 @@
         "method": "POST",
         "header": [
           { "key": "Content-Type", "value": "application/json" },
-          { "key": "Authorization", "value": "Token {{adminToken}}" }
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" }
         ],
         "body": { "mode": "raw", "raw": "{\n  \"status\": \"maybe\"\n}" },
         "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/rsvps/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", "rsvps", ""] }
@@ -664,7 +664,7 @@
       ],
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Token {{adminToken}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
         "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/rsvps/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", "rsvps", ""] }
       }
     },
@@ -688,7 +688,7 @@
       ],
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
         "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/rsvps/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", "rsvps", ""] }
       }
     },
@@ -726,7 +726,7 @@
       ],
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Token {{strangerToken}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{strangerToken}}" }],
         "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/rsvps/{{rsvpId}}/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", "rsvps", "{{rsvpId}}", ""] }
       }
     },
@@ -745,7 +745,7 @@
       ],
       "request": {
         "method": "DELETE",
-        "header": [{ "key": "Authorization", "value": "Token {{adminToken}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
         "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/rsvps/{{rsvpId}}/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", "rsvps", "{{rsvpId}}", ""] }
       }
     },
@@ -766,7 +766,7 @@
       ],
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
         "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/rsvps/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", "rsvps", ""] }
       }
     },
@@ -785,7 +785,7 @@
       ],
       "request": {
         "method": "DELETE",
-        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
         "url": { "raw": "{{baseUrl}}/api/events/{{eventId}}/", "host": ["{{baseUrl}}"], "path": ["api", "events", "{{eventId}}", ""] }
       }
     },
@@ -809,7 +809,7 @@
       ],
       "request": {
         "method": "GET",
-        "header": [{ "key": "Authorization", "value": "Token {{token}}" }],
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
         "url": { "raw": "{{baseUrl}}/api/events/", "host": ["{{baseUrl}}"], "path": ["api", "events", ""] }
       }
     },

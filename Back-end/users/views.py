@@ -2,13 +2,16 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from rest_framework import generics, permissions, status
-from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import AccessToken
 
+from .authentication import SessionJWTAuthentication
+from .models import UserSession
 from .serializers import (
     LoginSerializer,
     PasswordResetConfirmSerializer,
@@ -20,6 +23,17 @@ from .serializers import (
 User = get_user_model()
 
 
+def issue_session(user):
+    """Mint a JWT access token and record it as an active UserSession."""
+    access_token = AccessToken.for_user(user)
+    UserSession.objects.create(
+        user=user,
+        token=str(access_token),
+        expiry_time=timezone.now() + settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+    )
+    return str(access_token)
+
+
 class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterSerializer
@@ -28,9 +42,9 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        token, _ = Token.objects.get_or_create(user=user)
+        token = issue_session(user)
         return Response(
-            {'user': UserSerializer(user).data, 'token': token.key},
+            {'user': UserSerializer(user).data, 'token': token},
             status=status.HTTP_201_CREATED,
         )
 
@@ -42,8 +56,22 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-        token, _ = Token.objects.get_or_create(user=user)
-        return Response({'user': UserSerializer(user).data, 'token': token.key})
+        token = issue_session(user)
+        return Response({'user': UserSerializer(user).data, 'token': token})
+
+
+class LogoutView(APIView):
+    """Revokes the session tied to the request's own token - other
+    devices/tabs stay logged in, only this one is signed out."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        auth = SessionJWTAuthentication()
+        raw_token = auth.get_raw_token(auth.get_header(request))
+        token_str = raw_token.decode() if isinstance(raw_token, bytes) else raw_token
+        request.user.sessions.filter(token=token_str, is_active=True).update(is_active=False)
+        return Response({'detail': 'Logged out.'})
 
 
 class MeView(generics.RetrieveAPIView):
@@ -100,8 +128,8 @@ class PasswordResetConfirmView(APIView):
         user.set_password(serializer.validated_data['new_password'])
         user.save(update_fields=['password'])
 
-        # Invalidate any existing session so it has to re-authenticate with
-        # the new password - the old token stays valid otherwise.
-        Token.objects.filter(user=user).delete()
+        # Revoke every active session so it has to re-authenticate with the
+        # new password - a still-active JWT would otherwise keep working.
+        UserSession.objects.filter(user=user, is_active=True).update(is_active=False)
 
         return Response({'detail': 'Your password has been reset. You can now log in.'})

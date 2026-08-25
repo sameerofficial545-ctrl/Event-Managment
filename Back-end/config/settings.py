@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -152,13 +153,26 @@ AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+        'users.authentication.SessionJWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
     'EXCEPTION_HANDLER': 'config.exceptions.custom_exception_handler',
+}
+
+
+# djangorestframework-simplejwt
+# https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html
+#
+# A long-lived access token (no refresh token) keeps this simple for local
+# dev - real revocation is handled by UserSession.is_active instead of by
+# waiting for the token to expire.
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 

@@ -39,7 +39,14 @@ export function AuthProvider({ children }) {
     return data.user
   }
 
-  const logout = () => {
+  const logout = async () => {
+    // Best-effort - if this fails (e.g. token already expired) we still
+    // want to clear local state so the user is signed out client-side.
+    try {
+      await api.post('/auth/logout/')
+    } catch {
+      // ignore
+    }
     localStorage.removeItem(TOKEN_KEY)
     setToken(null)
     setUser(null)
