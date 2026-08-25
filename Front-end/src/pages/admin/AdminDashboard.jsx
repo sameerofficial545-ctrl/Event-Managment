@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
 import api, { parseApiError } from '../../api/client'
 import AppShell from '../../components/AppShell'
+import { useAuth } from '../../context/AuthContext'
 import { getDisplayName, getInitials } from '../../utils/user'
 import './AdminDashboard.css'
 
 function AdminDashboard() {
+  const { user: currentUser } = useAuth()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [updatingId, setUpdatingId] = useState(null)
+  const [rowError, setRowError] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -29,6 +33,20 @@ function AdminDashboard() {
     }
   }, [])
 
+  const handleRoleToggle = async (targetUser) => {
+    const nextRole = targetUser.is_staff ? 'Attendee' : 'Admin'
+    setRowError('')
+    setUpdatingId(targetUser.id)
+    try {
+      const { data } = await api.patch(`/auth/users/${targetUser.id}/role/`, { role: nextRole })
+      setUsers((prev) => prev.map((u) => (u.id === data.id ? data : u)))
+    } catch (requestError) {
+      setRowError(parseApiError(requestError).generalError)
+    } finally {
+      setUpdatingId(null)
+    }
+  }
+
   return (
     <AppShell
       headerProps={{
@@ -49,6 +67,7 @@ function AdminDashboard() {
 
       {loading && <p className="admin-table__status">Loading users…</p>}
       {error && <p className="admin-table__status admin-table__status--error">{error}</p>}
+      {rowError && <p className="admin-table__status admin-table__status--error">{rowError}</p>}
 
       {!loading && !error && (
         <div className="admin-table__wrap">
@@ -60,6 +79,7 @@ function AdminDashboard() {
                 <th>Email</th>
                 <th>Role</th>
                 <th>Joined</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -81,6 +101,25 @@ function AdminDashboard() {
                     </span>
                   </td>
                   <td>{new Date(user.date_joined).toLocaleDateString()}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className="admin-table__role-btn"
+                      disabled={updatingId === user.id || user.id === currentUser?.id}
+                      onClick={() => handleRoleToggle(user)}
+                      title={
+                        user.id === currentUser?.id
+                          ? "You can't change your own role"
+                          : undefined
+                      }
+                    >
+                      {updatingId === user.id
+                        ? 'Updating…'
+                        : user.is_staff
+                          ? 'Demote to Attendee'
+                          : 'Make Admin'}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>

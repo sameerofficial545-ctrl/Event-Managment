@@ -3,17 +3,19 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
+from users.permissions import is_admin
+
 from .models import RSVP, Event, Guest
 from .serializers import EventSerializer, GuestSerializer, RSVPSerializer
 
 
 class IsOrganizerOrReadOnly(permissions.BasePermission):
-    """Anyone authenticated can read; only the event's organizer can write."""
+    """Anyone authenticated can read; only the event's organizer or an Admin can write."""
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
-        return obj.organizer_id == request.user.id
+        return obj.organizer_id == request.user.id or is_admin(request.user)
 
 
 class EventViewSet(viewsets.ModelViewSet):
@@ -44,7 +46,7 @@ class EventRSVPListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         event = self.get_event()
-        if event.organizer_id == self.request.user.id:
+        if event.organizer_id == self.request.user.id or is_admin(self.request.user):
             return event.rsvps.all()
         return event.rsvps.filter(user=self.request.user)
 
@@ -94,7 +96,7 @@ class EventGuestListCreateView(generics.ListCreateAPIView):
 
     def get_event(self):
         event = get_object_or_404(Event, pk=self.kwargs['event_id'])
-        if event.organizer_id != self.request.user.id:
+        if event.organizer_id != self.request.user.id and not is_admin(self.request.user):
             raise PermissionDenied("Only the event's organizer can manage its guest list.")
         return event
 
@@ -118,7 +120,7 @@ class EventGuestDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_event(self):
         event = get_object_or_404(Event, pk=self.kwargs['event_id'])
-        if event.organizer_id != self.request.user.id:
+        if event.organizer_id != self.request.user.id and not is_admin(self.request.user):
             raise PermissionDenied("Only the event's organizer can manage its guest list.")
         return event
 

@@ -5,14 +5,25 @@ from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import serializers
 
+from .permissions import ADMIN_GROUP, ATTENDEE_GROUP, get_role
+
 User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'date_joined']
-        read_only_fields = ['is_staff', 'date_joined']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'role', 'date_joined']
+        read_only_fields = ['is_staff', 'role', 'date_joined']
+
+    def get_role(self, obj):
+        return get_role(obj)
+
+
+class UserRoleUpdateSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=[ADMIN_GROUP, ATTENDEE_GROUP])
 
 
 class RegisterSerializer(serializers.ModelSerializer):

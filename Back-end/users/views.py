@@ -2,21 +2,25 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from rest_framework import generics, permissions, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
 from .authentication import SessionJWTAuthentication
 from .models import UserSession
+from .permissions import ADMIN_GROUP, IsAdminRole
 from .serializers import (
     LoginSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
     RegisterSerializer,
+    UserRoleUpdateSerializer,
     UserSerializer,
 )
 
@@ -83,9 +87,28 @@ class MeView(generics.RetrieveAPIView):
 
 
 class AdminUserListView(generics.ListAPIView):
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsAdminRole]
     serializer_class = UserSerializer
     queryset = User.objects.all().order_by('-date_joined')
+
+
+class AdminUserRoleUpdateView(APIView):
+    """Lets an Admin promote a user to Admin or demote them back to Attendee."""
+
+    permission_classes = [IsAdminRole]
+
+    def patch(self, request, pk):
+        user = get_object_or_404(User, pk=pk)
+        serializer = UserRoleUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        new_role = serializer.validated_data['role']
+
+        if user.id == request.user.id and new_role != ADMIN_GROUP:
+            raise ValidationError({'role': 'You cannot demote your own account.'})
+
+        user.is_staff = new_role == ADMIN_GROUP
+        user.save(update_fields=['is_staff'])
+        return Response(UserSerializer(user).data)
 
 
 class PasswordResetRequestView(APIView):
