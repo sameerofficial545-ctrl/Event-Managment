@@ -148,3 +148,18 @@ export const IconMapPin = (props) => (
     <circle cx="12" cy="9.5" r="2.3" />
   </svg>
 )
+
+export const IconMail = (props) => (
+  <svg {...base} {...props}>
+    <rect x="3.5" y="5.5" width="17" height="13" rx="2.3" />
+    <path d="M4.5 7l7.5 6 7.5-6" />
+  </svg>
+)
+
+export const IconUserPlus = (props) => (
+  <svg {...base} {...props}>
+    <circle cx="9" cy="8" r="3.2" />
+    <path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5" />
+    <path d="M18 8v5M15.5 10.5h5" />
+  </svg>
+)

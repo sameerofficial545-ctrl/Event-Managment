@@ -35,7 +35,7 @@ function formatRange(event) {
     : `${startLabel} – ${formatDateTime(event.end_time)}`
 }
 
-function EventList({ events, onEdit, onDelete, onCreate }) {
+function EventList({ events, onEdit, onDelete, onCreate, onGuests }) {
   if (events.length === 0) {
     return (
       <div className="event-empty">
@@ -60,6 +60,13 @@ function EventList({ events, onEdit, onDelete, onCreate }) {
             <h3>{event.title}</h3>
             {event.is_mine ? (
               <div className="event-card__actions">
+                <button
+                  type="button"
+                  onClick={() => onGuests(event)}
+                  aria-label={`Manage guest list for ${event.title}`}
+                >
+                  <IconUsers className="icon" />
+                </button>
                 <button
                   type="button"
                   onClick={() => onEdit(event)}

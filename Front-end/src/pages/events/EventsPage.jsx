@@ -4,6 +4,7 @@ import AppShell from '../../components/AppShell'
 import EventFilters, { DEFAULT_FILTERS } from './EventFilters'
 import EventForm from './EventForm'
 import EventList from './EventList'
+import GuestList from './GuestList'
 import './Events.css'
 
 function toLocalDateKey(isoString) {
@@ -16,8 +17,9 @@ function EventsPage() {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [view, setView] = useState('list') // 'list' | 'form'
+  const [view, setView] = useState('list') // 'list' | 'form' | 'guests'
   const [editingEvent, setEditingEvent] = useState(null)
+  const [guestEvent, setGuestEvent] = useState(null)
   const [filters, setFilters] = useState(DEFAULT_FILTERS)
 
   const loadEvents = useCallback(() => {
@@ -64,6 +66,16 @@ function EventsPage() {
     setEditingEvent(null)
   }
 
+  const handleGuestsClick = (event) => {
+    setGuestEvent(event)
+    setView('guests')
+  }
+
+  const handleGuestsBack = () => {
+    setView('list')
+    setGuestEvent(null)
+  }
+
   const handleSaved = () => {
     setView('list')
     setEditingEvent(null)
@@ -86,7 +98,14 @@ function EventsPage() {
     <AppShell
       headerProps={{
         eyebrow: 'Events',
-        title: view === 'form' ? (editingEvent ? 'Edit event' : 'New event') : 'Events',
+        title:
+          view === 'form'
+            ? editingEvent
+              ? 'Edit event'
+              : 'New event'
+            : view === 'guests'
+              ? 'Guest list'
+              : 'Events',
         searchPlaceholder: 'Search events...',
         showCta: view === 'list',
         onCtaClick: handleCreateClick,
@@ -94,6 +113,8 @@ function EventsPage() {
     >
       {view === 'form' ? (
         <EventForm event={editingEvent} onSaved={handleSaved} onCancel={handleCancel} />
+      ) : view === 'guests' ? (
+        <GuestList event={guestEvent} onBack={handleGuestsBack} />
       ) : (
         <>
           <section className="page-intro">
@@ -130,6 +151,7 @@ function EventsPage() {
               onEdit={handleEditClick}
               onDelete={handleDelete}
               onCreate={handleCreateClick}
+              onGuests={handleGuestsClick}
             />
           )}
         </>
