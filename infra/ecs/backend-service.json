@@ -1,0 +1,28 @@
+{
+  "cluster": "event-mgmt-cluster",
+  "serviceName": "event-mgmt-backend",
+  "taskDefinition": "event-mgmt-backend",
+  "desiredCount": 1,
+  "launchType": "FARGATE",
+  "deploymentController": { "type": "ECS" },
+  "deploymentConfiguration": {
+    "maximumPercent": 200,
+    "minimumHealthyPercent": 100,
+    "deploymentCircuitBreaker": { "enable": true, "rollback": true }
+  },
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "subnets": ["<PRIVATE_SUBNET_ID_1>", "<PRIVATE_SUBNET_ID_2>"],
+      "securityGroups": ["<BACKEND_SECURITY_GROUP_ID>"],
+      "assignPublicIp": "DISABLED"
+    }
+  },
+  "loadBalancers": [
+    {
+      "targetGroupArn": "arn:aws:elasticloadbalancing:<REGION>:<ACCOUNT_ID>:targetgroup/event-mgmt-backend-tg/<ID>",
+      "containerName": "backend",
+      "containerPort": 8000
+    }
+  ],
+  "healthCheckGracePeriodSeconds": 30
+}

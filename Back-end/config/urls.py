@@ -20,6 +20,7 @@ from django.urls import include, path
 from . import views as error_views
 
 urlpatterns = [
+    path('healthz/', error_views.healthz, name='healthz'),
     path('admin/', admin.site.urls),
     path('api/auth/', include('users.urls')),
     path('api/events/', include('events.urls')),

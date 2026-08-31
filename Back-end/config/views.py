@@ -1,5 +1,11 @@
 from django.http import JsonResponse
 
+
+def healthz(request):
+    """Unauthenticated liveness check for the ECS/ALB health check."""
+    return JsonResponse({'status': 'ok'})
+
+
 # These back the handler400/403/404/500 hooks in config/urls.py. They only
 # fire for requests that never reach a DRF view - most commonly an
 # unmatched URL - since DRF's own exception handler (config/exceptions.py)

@@ -1,0 +1,42 @@
+version: 0.2
+
+env:
+  variables:
+    IMAGE_REPO_NAME: event-mgmt-frontend
+    CONTAINER_NAME: frontend
+  # VITE_API_URL is environment-specific (points at the deployed backend's
+  # domain) - set as a plaintext CodeBuild project environment variable per
+  # pipeline/stage rather than hardcoded here.
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 22
+    commands:
+      - cd Front-end && npm ci && cd ..
+
+  pre_build:
+    commands:
+      - echo "Linting frontend"
+      - cd Front-end && npm run lint && cd ..
+      - echo "Logging in to ECR"
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-8)
+      - IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:$IMAGE_TAG
+
+  build:
+    commands:
+      - echo "Building frontend image"
+      - docker build --build-arg VITE_API_URL=$VITE_API_URL -t $IMAGE_URI -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest Front-end
+
+  post_build:
+    commands:
+      - echo "Pushing frontend image"
+      - docker push $IMAGE_URI
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME:latest
+      - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $IMAGE_URI > imagedefinitions.json
+      - cat imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json

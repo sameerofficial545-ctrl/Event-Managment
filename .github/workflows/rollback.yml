@@ -1,0 +1,86 @@
+name: Rollback ECS Deployment
+
+# Manual escape hatch for a deployment that passed its health checks (so the
+# automatic ECS deployment circuit breaker didn't trip - see
+# infra/ecs/*-service.json) but is still functionally broken. Re-points the
+# service at an older, known-good task definition revision.
+#
+# Requires these repo/environment secrets (not set up yet - see
+# infra/README.md "Prerequisites"):
+#   AWS_DEPLOY_ROLE_ARN  IAM role this workflow assumes via OIDC, with
+#                        ecs:UpdateService / ecs:DescribeServices on the
+#                        cluster.
+#   AWS_REGION           e.g. us-east-1
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to roll back'
+        required: true
+        type: choice
+        options: [backend, frontend]
+      revision:
+        description: 'Task definition revision to roll back to (blank = previous revision)'
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  rollback:
+    name: Roll back ${{ github.event.inputs.service }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Resolve target task definition revision
+        id: target
+        run: |
+          set -euo pipefail
+          FAMILY="event-mgmt-${{ github.event.inputs.service }}"
+          INPUT_REVISION="${{ github.event.inputs.revision }}"
+
+          if [ -n "$INPUT_REVISION" ]; then
+            REVISION="$INPUT_REVISION"
+          else
+            CURRENT_TASK_DEF=$(aws ecs describe-services \
+              --cluster event-mgmt-cluster \
+              --services "$FAMILY" \
+              --query 'services[0].taskDefinition' --output text)
+            CURRENT_REVISION="${CURRENT_TASK_DEF##*:}"
+            REVISION=$((CURRENT_REVISION - 1))
+          fi
+
+          if [ "$REVISION" -lt 1 ]; then
+            echo "::error::No earlier revision available to roll back $FAMILY to." >&2
+            exit 1
+          fi
+
+          echo "family=$FAMILY" >> "$GITHUB_OUTPUT"
+          echo "revision=$REVISION" >> "$GITHUB_OUTPUT"
+
+      - name: Roll back service to previous task definition
+        run: |
+          aws ecs update-service \
+            --cluster event-mgmt-cluster \
+            --service "${{ steps.target.outputs.family }}" \
+            --task-definition "${{ steps.target.outputs.family }}:${{ steps.target.outputs.revision }}" \
+            --force-new-deployment
+
+      - name: Wait for service to stabilize
+        run: |
+          aws ecs wait services-stable \
+            --cluster event-mgmt-cluster \
+            --services "${{ steps.target.outputs.family }}"
+
+      - name: Summary
+        run: |
+          echo "Rolled back ${{ steps.target.outputs.family }} to revision ${{ steps.target.outputs.revision }}." >> "$GITHUB_STEP_SUMMARY"
