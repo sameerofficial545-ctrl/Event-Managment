@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getDisplayName, getInitials } from '../utils/user'
@@ -7,24 +6,15 @@ import {
   IconSparkle,
   IconDashboard,
   IconEvents,
-  IconCalendar,
   IconUsers,
-  IconSettings,
   IconLogOut,
   IconX,
 } from './icons'
 import './Sidebar.css'
 
-const PLACEHOLDER_ITEMS = [
-  { label: 'Calendar', icon: IconCalendar },
-  { label: 'Attendees', icon: IconUsers },
-  { label: 'Settings', icon: IconSettings },
-]
-
 const navLinkClass = ({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
 
 function Sidebar({ open, onClose }) {
-  const [active, setActive] = useState(null)
   const { user, logout, isAdmin } = useAuth()
 
   return (
@@ -66,19 +56,6 @@ function Sidebar({ open, onClose }) {
                   <span>Events</span>
                 </NavLink>
               </li>
-              {PLACEHOLDER_ITEMS.map(({ label, icon: Icon, badge }) => (
-                <li key={label}>
-                  <button
-                    type="button"
-                    className={`sidebar__link ${active === label ? 'sidebar__link--active' : ''}`}
-                    onClick={() => setActive(label)}
-                  >
-                    <Icon className="icon" />
-                    <span>{label}</span>
-                    {badge ? <span className="sidebar__badge">{badge}</span> : null}
-                  </button>
-                </li>
-              ))}
             </ul>
 
             {isAdmin && (

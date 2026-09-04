@@ -6,6 +6,7 @@ import {
   IconPlus,
   IconTrash,
   IconUsers,
+  IconArrowRight,
 } from '../../components/icons'
 import './Events.css'
 
@@ -35,7 +36,7 @@ function formatRange(event) {
     : `${startLabel} – ${formatDateTime(event.end_time)}`
 }
 
-function EventList({ events, onEdit, onDelete, onCreate, onGuests }) {
+function EventList({ events, onEdit, onDelete, onCreate, onGuests, onSelect }) {
   if (events.length === 0) {
     return (
       <div className="event-empty">
@@ -55,28 +56,32 @@ function EventList({ events, onEdit, onDelete, onCreate, onGuests }) {
   return (
     <div className="event-grid">
       {events.map((event) => (
-        <article className="event-card" key={event.id}>
+        <article className="event-card" key={event.id} onClick={() => onSelect(event)}>
+          <div className="event-card__date" aria-hidden="true">
+            <span>{new Date(event.start_time).toLocaleDateString(undefined, { month: 'short' })}</span>
+            <strong>{new Date(event.start_time).getDate()}</strong>
+          </div>
           <div className="event-card__head">
             <h3>{event.title}</h3>
             {event.is_mine ? (
               <div className="event-card__actions">
                 <button
                   type="button"
-                  onClick={() => onGuests(event)}
+                  onClick={(e) => { e.stopPropagation(); onGuests(event) }}
                   aria-label={`Manage guest list for ${event.title}`}
                 >
                   <IconUsers className="icon" />
                 </button>
                 <button
                   type="button"
-                  onClick={() => onEdit(event)}
+                  onClick={(e) => { e.stopPropagation(); onEdit(event) }}
                   aria-label={`Edit ${event.title}`}
                 >
                   <IconPencil className="icon" />
                 </button>
                 <button
                   type="button"
-                  onClick={() => onDelete(event)}
+                  onClick={(e) => { e.stopPropagation(); onDelete(event) }}
                   aria-label={`Delete ${event.title}`}
                 >
                   <IconTrash className="icon" />
@@ -105,6 +110,9 @@ function EventList({ events, onEdit, onDelete, onCreate, onGuests }) {
           )}
 
           {event.description && <p className="event-card__desc">{event.description}</p>}
+          <button type="button" className="event-card__open" onClick={(e) => { e.stopPropagation(); onSelect(event) }}>
+            View details <IconArrowRight className="icon" />
+          </button>
         </article>
       ))}
     </div>

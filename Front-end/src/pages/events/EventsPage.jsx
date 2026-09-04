@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import api, { parseApiError } from '../../api/client'
 import AppShell from '../../components/AppShell'
 import EventFilters, { DEFAULT_FILTERS } from './EventFilters'
 import EventForm from './EventForm'
 import EventList from './EventList'
 import GuestList from './GuestList'
+import EventDetail from './EventDetail'
 import './Events.css'
 
 function toLocalDateKey(isoString) {
@@ -14,13 +16,15 @@ function toLocalDateKey(isoString) {
 }
 
 function EventsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [view, setView] = useState('list') // 'list' | 'form' | 'guests'
   const [editingEvent, setEditingEvent] = useState(null)
   const [guestEvent, setGuestEvent] = useState(null)
-  const [filters, setFilters] = useState(DEFAULT_FILTERS)
+  const [filters, setFilters] = useState(() => ({ ...DEFAULT_FILTERS, search: searchParams.get('search') || '' }))
+  const [selectedEvent, setSelectedEvent] = useState(null)
 
   const loadEvents = useCallback(() => {
     setLoading(true)
@@ -36,6 +40,19 @@ function EventsPage() {
     loadEvents()
   }, [loadEvents])
 
+  useEffect(() => {
+    if (searchParams.get('create') === '1') {
+      setEditingEvent(null)
+      setView('form')
+      setSearchParams({}, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
+
+  useEffect(() => {
+    const eventId = searchParams.get('event')
+    if (eventId && events.length) setSelectedEvent(events.find((event) => String(event.id) === eventId) || null)
+  }, [events, searchParams])
+
   const filteredEvents = useMemo(() => {
     const now = new Date()
     return events.filter((event) => {
@@ -47,6 +64,10 @@ function EventsPage() {
         const needle = filters.location.trim().toLowerCase()
         if (!event.location?.toLowerCase().includes(needle)) return false
       }
+      if (filters.search.trim()) {
+        const needle = filters.search.trim().toLowerCase()
+        if (![event.title, event.description, event.location, event.organizer].some((value) => value?.toLowerCase().includes(needle))) return false
+      }
       return true
     })
   }, [events, filters])
@@ -57,6 +78,7 @@ function EventsPage() {
   }
 
   const handleEditClick = (event) => {
+    setSelectedEvent(null)
     setEditingEvent(event)
     setView('form')
   }
@@ -67,6 +89,7 @@ function EventsPage() {
   }
 
   const handleGuestsClick = (event) => {
+    setSelectedEvent(null)
     setGuestEvent(event)
     setView('guests')
   }
@@ -109,6 +132,7 @@ function EventsPage() {
         searchPlaceholder: 'Search events...',
         showCta: view === 'list',
         onCtaClick: handleCreateClick,
+        onSearch: (search) => setFilters((current) => ({ ...current, search })),
       }}
     >
       {view === 'form' ? (
@@ -152,8 +176,10 @@ function EventsPage() {
               onDelete={handleDelete}
               onCreate={handleCreateClick}
               onGuests={handleGuestsClick}
+              onSelect={(event) => { setSelectedEvent(event); setSearchParams({ event: String(event.id) }) }}
             />
           )}
+          {selectedEvent && <EventDetail event={selectedEvent} onClose={() => { setSelectedEvent(null); setSearchParams({}) }} onEdit={handleEditClick} onGuests={handleGuestsClick} />}
         </>
       )}
     </AppShell>

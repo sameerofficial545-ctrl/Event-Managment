@@ -8,13 +8,14 @@ const RANGE_OPTIONS = [
   { key: 'all', label: 'All' },
 ]
 
-export const DEFAULT_FILTERS = { range: 'upcoming', date: '', location: '' }
+export const DEFAULT_FILTERS = { range: 'upcoming', date: '', location: '', search: '' }
 
 function isDefault(filters) {
   return (
     filters.range === DEFAULT_FILTERS.range &&
     filters.date === DEFAULT_FILTERS.date &&
-    filters.location === DEFAULT_FILTERS.location
+    filters.location === DEFAULT_FILTERS.location &&
+    filters.search === DEFAULT_FILTERS.search
   )
 }
 

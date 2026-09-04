@@ -63,11 +63,15 @@
 }
 
 .header__right {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
 }
+
+.header-popover { position:absolute; top:calc(100% + 14px); right:0; width:250px; padding:17px; border:1px solid var(--border); border-radius:15px; background:var(--bg); box-shadow:0 22px 55px -25px rgba(15,23,42,.55); animation:header-pop .18s ease; }
+.header-popover__kicker{display:block;margin-bottom:9px;color:var(--accent);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.1em}.header-popover strong{display:block;color:var(--text-h);font-size:14px}.header-popover p{margin-top:4px;color:var(--text);font-size:11px;line-height:1.45;overflow-wrap:anywhere}.header-popover__role{display:inline-flex;margin-top:10px;padding:4px 8px;border-radius:999px;background:var(--accent-bg);color:var(--accent);font-size:10px;font-weight:750}.header-popover button{width:100%;margin-top:14px;padding:9px;border:1px solid var(--border);border-radius:9px;background:var(--code-bg);color:var(--text-h);font:inherit;font-size:11px;font-weight:750;cursor:pointer}@keyframes header-pop{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
 
 .header__search {
   display: flex;

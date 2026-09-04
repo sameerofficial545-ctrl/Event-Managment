@@ -9,6 +9,7 @@ import ForgotPassword from './pages/auth/ForgotPassword'
 import ResetPassword from './pages/auth/ResetPassword'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import EventsPage from './pages/events/EventsPage'
+import Dashboard from './pages/dashboard/Dashboard'
 import './App.css'
 
 const STATS = [
@@ -17,7 +18,7 @@ const STATS = [
   { icon: '💜', label: 'Revenue', value: '$24.6K', delta: '+8.2%' },
 ]
 
-function Dashboard() {
+export function DashboardLegacy() {
   return (
     <AppShell>
       <section className="page-intro">
