@@ -1,0 +1,633 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Eventify Week 4 - ECR, CodePipeline, ECS Fargate, and public ALB.
+
+Parameters:
+  GitHubConnectionArn:
+    Type: String
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  PublicSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+  RepoOwner:
+    Type: String
+    Default: sameerofficial545-ctrl
+  RepoName:
+    Type: String
+    Default: Event-Managment
+  BranchName:
+    Type: String
+    Default: main
+  AlertEmail:
+    Type: String
+    NoEcho: true
+    Description: Email address that confirms and receives CloudWatch alarm notifications.
+
+Resources:
+  BackendRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: event-mgmt-backend
+      ImageScanningConfiguration: {ScanOnPush: true}
+  FrontendRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: event-mgmt-frontend
+      ImageScanningConfiguration: {ScanOnPush: true}
+
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: event-mgmt-cluster
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+
+  BackendLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/event-mgmt-backend
+      RetentionInDays: 7
+  FrontendLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/event-mgmt-frontend
+      RetentionInDays: 7
+
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Public HTTP access to Eventify ALB
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+  BackendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Backend access from Eventify ALB
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          SourceSecurityGroupId: !Ref AlbSecurityGroup
+  FrontendSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Frontend access from Eventify ALB
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref AlbSecurityGroup
+
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: PostgreSQL access from the Eventify backend only
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref BackendSecurityGroup
+  DatabaseSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Eventify database subnets
+      SubnetIds: !Ref PublicSubnets
+  Database:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: event-mgmt-postgres
+      Engine: postgres
+      EngineVersion: '17.6'
+      DBInstanceClass: db.t4g.micro
+      AllocatedStorage: '20'
+      MaxAllocatedStorage: 100
+      StorageType: gp3
+      StorageEncrypted: true
+      DBName: eventify
+      MasterUsername: eventify_admin
+      ManageMasterUserPassword: true
+      PubliclyAccessible: false
+      MultiAZ: false
+      BackupRetentionPeriod: 7
+      CopyTagsToSnapshot: true
+      AutoMinorVersionUpgrade: true
+      DeletionProtection: false
+      EnablePerformanceInsights: false
+      DBSubnetGroupName: !Ref DatabaseSubnetGroup
+      VPCSecurityGroups: [!Ref DatabaseSecurityGroup]
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: event-mgmt-alb
+      Scheme: internet-facing
+      Type: application
+      SecurityGroups: [!Ref AlbSecurityGroup]
+      Subnets: !Ref PublicSubnets
+  BackendTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: event-mgmt-backend-tg
+      VpcId: !Ref VpcId
+      Protocol: HTTP
+      Port: 8000
+      TargetType: ip
+      HealthCheckPath: /healthz/
+      Matcher: {HttpCode: '200'}
+  FrontendTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: event-mgmt-frontend-tg
+      VpcId: !Ref VpcId
+      Protocol: HTTP
+      Port: 80
+      TargetType: ip
+      HealthCheckPath: /healthz
+      Matcher: {HttpCode: '200'}
+  HttpListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref FrontendTargetGroup
+  ApiListenerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref HttpListener
+      Priority: 10
+      Conditions:
+        - Field: path-pattern
+          Values: ['/api', '/api/*']
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref BackendTargetGroup
+
+  EcsExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: event-mgmt-ecs-execution-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: ecs-tasks.amazonaws.com}
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: event-mgmt-read-database-secret
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !GetAtt Database.MasterUserSecret.SecretArn
+  BackendTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: event-mgmt-backend-task-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: ecs-tasks.amazonaws.com}
+            Action: sts:AssumeRole
+
+  BackendTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: event-mgmt-backend
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: '512'
+      Memory: '1024'
+      ExecutionRoleArn: !GetAtt EcsExecutionRole.Arn
+      TaskRoleArn: !GetAtt BackendTaskRole.Arn
+      ContainerDefinitions:
+        - Name: backend
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/event-mgmt-backend:latest'
+          Essential: true
+          PortMappings:
+            - ContainerPort: 8000
+          Environment:
+            - {Name: DJANGO_DEBUG, Value: 'False'}
+            - Name: DJANGO_SECRET_KEY
+              Value: !Sub 'week4-${AWS::AccountId}-${AWS::StackId}'
+            - Name: DJANGO_ALLOWED_HOSTS
+              # ALB target health checks use the task's private IP as Host.
+              # Network access remains restricted to the ALB security group.
+              Value: '*'
+            - Name: CORS_ALLOWED_ORIGINS
+              Value: !Sub 'http://${LoadBalancer.DNSName}'
+            - Name: FRONTEND_URL
+              Value: !Sub 'http://${LoadBalancer.DNSName}'
+            - {Name: DB_NAME, Value: eventify}
+            - Name: DB_HOST
+              Value: !GetAtt Database.Endpoint.Address
+            - {Name: DB_PORT, Value: '5432'}
+          Secrets:
+            - Name: DB_USER
+              ValueFrom: !Join ['', [!GetAtt Database.MasterUserSecret.SecretArn, ':username::']]
+            - Name: DB_PASSWORD
+              ValueFrom: !Join ['', [!GetAtt Database.MasterUserSecret.SecretArn, ':password::']]
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref BackendLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: backend
+          HealthCheck:
+            Command: [CMD-SHELL, "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz/')\" || exit 1"]
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 30
+  FrontendTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: event-mgmt-frontend
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      Cpu: '256'
+      Memory: '512'
+      ExecutionRoleArn: !GetAtt EcsExecutionRole.Arn
+      ContainerDefinitions:
+        - Name: frontend
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/event-mgmt-frontend:latest'
+          Essential: true
+          PortMappings:
+            - ContainerPort: 80
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref FrontendLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: frontend
+          HealthCheck:
+            Command: [CMD-SHELL, 'wget -q -O- http://127.0.0.1:80/healthz || exit 1']
+            Interval: 30
+            Timeout: 5
+            Retries: 3
+            StartPeriod: 10
+
+  BackendService:
+    Type: AWS::ECS::Service
+    DependsOn: ApiListenerRule
+    Properties:
+      ServiceName: event-mgmt-backend
+      Cluster: !Ref Cluster
+      TaskDefinition: !Ref BackendTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      DeploymentConfiguration:
+        DeploymentCircuitBreaker: {Enable: true, Rollback: true}
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups: [!Ref BackendSecurityGroup]
+          Subnets: !Ref PublicSubnets
+      LoadBalancers:
+        - TargetGroupArn: !Ref BackendTargetGroup
+          ContainerName: backend
+          ContainerPort: 8000
+      HealthCheckGracePeriodSeconds: 60
+  FrontendService:
+    Type: AWS::ECS::Service
+    DependsOn: HttpListener
+    Properties:
+      ServiceName: event-mgmt-frontend
+      Cluster: !Ref Cluster
+      TaskDefinition: !Ref FrontendTaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      DeploymentConfiguration:
+        DeploymentCircuitBreaker: {Enable: true, Rollback: true}
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups: [!Ref FrontendSecurityGroup]
+          Subnets: !Ref PublicSubnets
+      LoadBalancers:
+        - TargetGroupArn: !Ref FrontendTargetGroup
+          ContainerName: frontend
+          ContainerPort: 80
+      HealthCheckGracePeriodSeconds: 30
+
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: {SSEAlgorithm: AES256}
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-artifacts
+            Status: Enabled
+            ExpirationInDays: 7
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: codebuild.amazonaws.com}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: event-mgmt-build
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents', 'ecr:GetAuthorizationToken']
+                Resource: '*'
+              - Effect: Allow
+                Action: ['s3:GetObject', 's3:PutObject', 's3:GetBucketLocation']
+                Resource: [!GetAtt ArtifactBucket.Arn, !Sub '${ArtifactBucket.Arn}/*']
+              - Effect: Allow
+                Action: ['ecr:BatchCheckLayerAvailability', 'ecr:GetDownloadUrlForLayer', 'ecr:BatchGetImage', 'ecr:PutImage', 'ecr:InitiateLayerUpload', 'ecr:UploadLayerPart', 'ecr:CompleteLayerUpload']
+                Resource: [!GetAtt BackendRepository.Arn, !GetAtt FrontendRepository.Arn]
+  BackendBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: event-mgmt-backend-build
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts: {Type: CODEPIPELINE}
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - {Name: AWS_ACCOUNT_ID, Value: !Ref 'AWS::AccountId'}
+          - {Name: AWS_DEFAULT_REGION, Value: !Ref 'AWS::Region'}
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infra/codebuild/buildspec-backend.yml
+  FrontendBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: event-mgmt-frontend-build
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts: {Type: CODEPIPELINE}
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:7.0
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - {Name: AWS_ACCOUNT_ID, Value: !Ref 'AWS::AccountId'}
+          - {Name: AWS_DEFAULT_REGION, Value: !Ref 'AWS::Region'}
+          - Name: VITE_API_URL
+            Value: !Sub 'http://${LoadBalancer.DNSName}/api'
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: infra/codebuild/buildspec-frontend.yml
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: codepipeline.amazonaws.com}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: event-mgmt-pipeline
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ['s3:GetObject', 's3:PutObject', 's3:GetBucketVersioning']
+                Resource: [!GetAtt ArtifactBucket.Arn, !Sub '${ArtifactBucket.Arn}/*']
+              - Effect: Allow
+                Action: codeconnections:UseConnection
+                Resource: !Ref GitHubConnectionArn
+              - Effect: Allow
+                Action: ['codebuild:BatchGetBuilds', 'codebuild:StartBuild']
+                Resource: [!GetAtt BackendBuild.Arn, !GetAtt FrontendBuild.Arn]
+              - Effect: Allow
+                Action: ['ecs:DescribeServices', 'ecs:DescribeTaskDefinition', 'ecs:DescribeTasks', 'ecs:ListTasks', 'ecs:RegisterTaskDefinition', 'ecs:UpdateService']
+                Resource: '*'
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: [!GetAtt EcsExecutionRole.Arn, !GetAtt BackendTaskRole.Arn]
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    DependsOn: [BackendService, FrontendService]
+    Properties:
+      Name: event-mgmt-pipeline
+      RoleArn: !GetAtt PipelineRole.Arn
+      ArtifactStore: {Type: S3, Location: !Ref ArtifactBucket}
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              ActionTypeId: {Category: Source, Owner: AWS, Provider: CodeStarSourceConnection, Version: '1'}
+              Configuration:
+                ConnectionArn: !Ref GitHubConnectionArn
+                FullRepositoryId: !Sub '${RepoOwner}/${RepoName}'
+                BranchName: !Ref BranchName
+              OutputArtifacts: [{Name: SourceOutput}]
+        - Name: Build
+          Actions:
+            - Name: BuildBackend
+              ActionTypeId: {Category: Build, Owner: AWS, Provider: CodeBuild, Version: '1'}
+              Configuration: {ProjectName: !Ref BackendBuild}
+              InputArtifacts: [{Name: SourceOutput}]
+              OutputArtifacts: [{Name: BackendBuildOutput}]
+              RunOrder: 1
+            - Name: BuildFrontend
+              ActionTypeId: {Category: Build, Owner: AWS, Provider: CodeBuild, Version: '1'}
+              Configuration: {ProjectName: !Ref FrontendBuild}
+              InputArtifacts: [{Name: SourceOutput}]
+              OutputArtifacts: [{Name: FrontendBuildOutput}]
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: DeployBackend
+              ActionTypeId: {Category: Deploy, Owner: AWS, Provider: ECS, Version: '1'}
+              Configuration: {ClusterName: event-mgmt-cluster, ServiceName: event-mgmt-backend, FileName: imagedefinitions.json}
+              InputArtifacts: [{Name: BackendBuildOutput}]
+              RunOrder: 1
+            - Name: DeployFrontend
+              ActionTypeId: {Category: Deploy, Owner: AWS, Provider: ECS, Version: '1'}
+              Configuration: {ClusterName: event-mgmt-cluster, ServiceName: event-mgmt-frontend, FileName: imagedefinitions.json}
+              InputArtifacts: [{Name: FrontendBuildOutput}]
+              RunOrder: 1
+
+  Alb5xxAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: event-mgmt-alb-5xx
+      AlarmDescription: Eventify ALB returned five or more 5xx responses in five minutes
+      Namespace: AWS/ApplicationELB
+      MetricName: HTTPCode_Target_5XX_Count
+      Dimensions:
+        - Name: LoadBalancer
+          Value: !GetAtt LoadBalancer.LoadBalancerFullName
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+  BackendCpuAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: event-mgmt-backend-high-cpu
+      Namespace: AWS/ECS
+      MetricName: CPUUtilization
+      Dimensions:
+        - {Name: ClusterName, Value: event-mgmt-cluster}
+        - {Name: ServiceName, Value: event-mgmt-backend}
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+  FrontendCpuAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: event-mgmt-frontend-high-cpu
+      Namespace: AWS/ECS
+      MetricName: CPUUtilization
+      Dimensions:
+        - {Name: ClusterName, Value: event-mgmt-cluster}
+        - {Name: ServiceName, Value: event-mgmt-frontend}
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+  DatabaseCpuAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: event-mgmt-database-high-cpu
+      Namespace: AWS/RDS
+      MetricName: CPUUtilization
+      Dimensions:
+        - {Name: DBInstanceIdentifier, Value: !Ref Database}
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 2
+      Threshold: 80
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+  DatabaseStorageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: event-mgmt-database-low-storage
+      Namespace: AWS/RDS
+      MetricName: FreeStorageSpace
+      Dimensions:
+        - {Name: DBInstanceIdentifier, Value: !Ref Database}
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 2147483648
+      ComparisonOperator: LessThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlarmTopic]
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: event-mgmt-alarms
+      DisplayName: Eventify AWS alarms
+      Subscription:
+        - Protocol: email
+          Endpoint: !Ref AlertEmail
+  ReminderSchedulerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: event-mgmt-reminder-scheduler-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: {Service: scheduler.amazonaws.com}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: event-mgmt-run-reminder-task
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: ecs:RunTask
+                Resource: !Ref BackendTaskDefinition
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: [!GetAtt EcsExecutionRole.Arn, !GetAtt BackendTaskRole.Arn]
+  ReminderSchedule:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: event-mgmt-hourly-reminders
+      Description: Runs the Django event reminder command every hour.
+      State: ENABLED
+      ScheduleExpression: cron(0 * * * ? *)
+      ScheduleExpressionTimezone: Asia/Kolkata
+      FlexibleTimeWindow: {Mode: 'OFF'}
+      Target:
+        Arn: !GetAtt Cluster.Arn
+        RoleArn: !GetAtt ReminderSchedulerRole.Arn
+        Input: '{"containerOverrides":[{"name":"backend","command":["python","manage.py","send_event_reminders","--hours","24"]}]}'
+        EcsParameters:
+          TaskDefinitionArn: !Ref BackendTaskDefinition
+          TaskCount: 1
+          LaunchType: FARGATE
+          NetworkConfiguration:
+            AwsvpcConfiguration:
+              AssignPublicIp: ENABLED
+              SecurityGroups: [!Ref BackendSecurityGroup]
+              Subnets: !Ref PublicSubnets
+  MonitoringDashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: event-mgmt
+      DashboardBody: !Sub |
+        {"widgets":[
+          {"type":"metric","x":0,"y":0,"width":12,"height":6,"properties":{"title":"ECS CPU","region":"${AWS::Region}","metrics":[["AWS/ECS","CPUUtilization","ClusterName","event-mgmt-cluster","ServiceName","event-mgmt-backend"],[".",".",".",".","ServiceName","event-mgmt-frontend"]],"stat":"Average","period":300}},
+          {"type":"metric","x":12,"y":0,"width":12,"height":6,"properties":{"title":"RDS CPU and connections","region":"${AWS::Region}","metrics":[["AWS/RDS","CPUUtilization","DBInstanceIdentifier","event-mgmt-postgres"],[".","DatabaseConnections",".","."]],"stat":"Average","period":300}},
+          {"type":"metric","x":0,"y":6,"width":24,"height":6,"properties":{"title":"ALB responses","region":"${AWS::Region}","metrics":[["AWS/ApplicationELB","HTTPCode_Target_2XX_Count","LoadBalancer","${LoadBalancer.LoadBalancerFullName}"],[".","HTTPCode_Target_4XX_Count",".","."],[".","HTTPCode_Target_5XX_Count",".","."]],"stat":"Sum","period":300}}
+        ]}
+
+Outputs:
+  ApplicationUrl:
+    Value: !Sub 'http://${LoadBalancer.DNSName}'
+  LoadBalancerDnsName:
+    Value: !GetAtt LoadBalancer.DNSName
+  PipelineName:
+    Value: !Ref Pipeline
+  DatabaseEndpoint:
+    Value: !GetAtt Database.Endpoint.Address
+  DatabaseSecretArn:
+    Value: !GetAtt Database.MasterUserSecret.SecretArn
+  MonitoringDashboardName:
+    Value: !Ref MonitoringDashboard
+  AlarmTopicArn:
+    Value: !Ref AlarmTopic
+  ReminderScheduleName:
+    Value: !Ref ReminderSchedule
