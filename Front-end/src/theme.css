@@ -1,0 +1,147 @@
+/* Eventify Aurora — one cohesive visual language across every product surface. */
+:root {
+  --text: #526078;
+  --text-h: #0b1739;
+  --bg: #ffffff;
+  --border: #dce5f2;
+  --code-bg: #f2f6fc;
+  --accent: #4f46e5;
+  --accent-bg: rgba(79, 70, 229, .09);
+  --accent-border: rgba(79, 70, 229, .34);
+  --social-bg: rgba(242, 246, 252, .8);
+  --shadow: 0 18px 50px -32px rgba(20, 37, 74, .42), 0 3px 12px rgba(25, 45, 90, .06);
+  color-scheme: light;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 92% 5%, rgba(34, 211, 238, .12), transparent 27rem),
+    radial-gradient(circle at 38% 0%, rgba(99, 102, 241, .08), transparent 24rem),
+    #f7f9fd;
+}
+
+.particle-field--fixed { opacity: .38; }
+.app-content { background: transparent; }
+
+.sidebar {
+  --sidebar-bg: #08132f;
+  --sidebar-bg-alt: #101c3f;
+  --sidebar-text: #a9b7d6;
+  background:
+    radial-gradient(500px 380px at -20% -5%, rgba(34, 211, 238, .22), transparent 63%),
+    radial-gradient(420px 450px at 115% 62%, rgba(99, 102, 241, .22), transparent 65%),
+    linear-gradient(180deg, var(--sidebar-bg), var(--sidebar-bg-alt));
+  box-shadow: 18px 0 50px -38px rgba(7, 18, 47, .9);
+}
+.sidebar__brand-mark,
+.sidebar__avatar,
+.header__avatar,
+.header__cta,
+.event-form__submit,
+.admin-role-btn {
+  background: linear-gradient(135deg, #22d3ee, #6366f1 62%, #8b5cf6);
+}
+.sidebar__brand-mark { box-shadow: 0 10px 26px -8px rgba(34, 211, 238, .65); }
+.sidebar__link--active {
+  background: linear-gradient(90deg, rgba(34, 211, 238, .18), rgba(99, 102, 241, .12));
+  box-shadow: inset 0 0 0 1px rgba(103, 232, 249, .22), 0 9px 25px -18px rgba(34, 211, 238, .8);
+}
+.sidebar__link--active::before { background: linear-gradient(#67e8f9, #818cf8); box-shadow: 0 0 14px rgba(34, 211, 238, .8); }
+
+.header {
+  background: rgba(247, 249, 253, .78);
+  border-color: rgba(205, 217, 235, .8);
+  box-shadow: 0 8px 35px -32px rgba(12, 29, 70, .7);
+}
+.header__cta { box-shadow: 0 12px 26px -13px rgba(79, 70, 229, .8); }
+
+.dashboard-hero {
+  background:
+    radial-gradient(circle at 78% 20%, rgba(103, 232, 249, .28), transparent 25%),
+    radial-gradient(circle at 100% 100%, rgba(139, 92, 246, .38), transparent 40%),
+    linear-gradient(125deg, #071c46, #153a78 50%, #4338ca 112%);
+  box-shadow: 0 34px 70px -38px rgba(30, 64, 175, .75);
+}
+.dashboard-hero__eyebrow, .dashboard-hero p, .dashboard-hero__orb small { color: #c9f7ff; }
+.primary-action { color: #243c8f; }
+.dashboard-panel--tips { background: linear-gradient(150deg, #071b3f, #173b73 68%, #3730a3); }
+
+.product-hero--calendar,
+.product-hero--plans,
+.product-hero--insights {
+  background:
+    radial-gradient(circle at 80% 15%, rgba(103, 232, 249, .3), transparent 27%),
+    linear-gradient(125deg, #0a2557, #2456a6 58%, #5548d8);
+  box-shadow: 0 28px 60px -38px rgba(37, 99, 235, .72);
+}
+
+.metric-card,
+.dashboard-panel,
+.event-card,
+.calendar-card,
+.day-agenda,
+.plan-card,
+.insight-panel,
+.insight-metrics article,
+.header-popover,
+.admin-table__wrap {
+  border-color: rgba(211, 222, 238, .92);
+  box-shadow: var(--shadow);
+}
+.metric-card:hover,
+.event-card:hover,
+.plan-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, .28);
+  box-shadow: 0 24px 52px -30px rgba(49, 72, 145, .5);
+}
+.metric-card__icon--violet { color: #4f46e5; background: #e8eaff; }
+.metric-card__icon--blue { color: #0877b9; background: #dcf5ff; }
+.metric-card__icon--orange { color: #c75b12; background: #fff0dc; }
+.metric-card__icon--green { color: #087f68; background: #dff8ef; }
+.agenda-item__line { background: #4f46e5; }
+.agenda-item__line--2 { background: #06b6d4; }
+.agenda-item__line--3 { background: #f59e0b; }
+
+.event-detail__cover {
+  background:
+    radial-gradient(circle at 72% 15%, rgba(103, 232, 249, .3), transparent 28%),
+    linear-gradient(130deg, #0b2656, #3156bd 58%, #6d4de3);
+}
+.event-detail__choices button.is-active,
+.filter-rail button.is-active {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  box-shadow: 0 8px 20px -12px rgba(37, 99, 235, .8);
+}
+.calendar-grid .dot { background: #4f46e5; }
+.calendar-grid .dot--2 { background: #06b6d4; }
+.calendar-grid .dot--3 { background: #f59e0b; }
+.audience-bar i:nth-child(1), .chart-legend i { background: #0ea5a4; }
+.audience-bar i:nth-child(2), .chart-legend span:nth-child(2) i { background: #6366f1; }
+.audience-bar i:nth-child(3), .chart-legend span:nth-child(3) i { background: #f59e0b; }
+
+.auth-layout__visual {
+  background:
+    radial-gradient(650px 430px at 10% 0%, rgba(34, 211, 238, .24), transparent 60%),
+    linear-gradient(145deg, #07162f, #102e63 62%, #312e81);
+}
+.auth-layout__brand-mark,
+.auth-submit { background: linear-gradient(135deg, #22d3ee, #4f46e5 66%, #7c3aed); }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #aebbd1;
+    --text-h: #f4f8ff;
+    --bg: #101a31;
+    --border: #263653;
+    --code-bg: #16243e;
+    --accent: #818cf8;
+    --accent-bg: rgba(129, 140, 248, .14);
+    --accent-border: rgba(129, 140, 248, .42);
+    --shadow: 0 20px 55px -35px rgba(0, 0, 0, .8);
+    color-scheme: dark;
+  }
+  body { background: radial-gradient(circle at 85% 0%, rgba(34, 211, 238,.08), transparent 30rem), #0c1427; }
+  .header { background: rgba(12, 20, 39, .82); }
+}
