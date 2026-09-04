@@ -1,4 +1,6 @@
-/* Eventify Aurora — one cohesive visual language across every product surface. */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Poppins:wght@400;500;600&display=swap');
+
+/* Eventify Stage — editorial event styling inspired by the supplied StagePro reference. */
 :root {
   --text: #526078;
   --text-h: #0b1739;
@@ -11,6 +13,145 @@
   --social-bg: rgba(242, 246, 252, .8);
   --shadow: 0 18px 50px -32px rgba(20, 37, 74, .42), 0 3px 12px rgba(25, 45, 90, .06);
   color-scheme: light;
+}
+
+/* StagePro-inspired art direction */
+:root {
+  --text: #53605d;
+  --text-h: #0c1b1b;
+  --bg: #fffefa;
+  --border: #d7ddd8;
+  --code-bg: #f3f2e9;
+  --accent: #b96800;
+  --accent-bg: rgba(255, 174, 27, .18);
+  --accent-border: rgba(185, 104, 0, .42);
+  --sans: 'Poppins', system-ui, sans-serif;
+  --heading: 'Bricolage Grotesque', system-ui, sans-serif;
+  --shadow: 0 18px 0 -12px rgba(12, 27, 27, .11), 0 24px 55px -38px rgba(12, 27, 27, .36);
+}
+
+body {
+  background:
+    radial-gradient(circle at 92% 2%, rgba(255, 174, 27, .18), transparent 25rem),
+    #f8f7f0;
+}
+
+.sidebar {
+  --sidebar-bg: #071313;
+  --sidebar-bg-alt: #0c1b1b;
+  --sidebar-text: #b9c5c1;
+  background:
+    radial-gradient(420px 380px at -20% 0%, rgba(255, 174, 27, .17), transparent 64%),
+    linear-gradient(180deg, #071313, #0c1b1b);
+}
+.sidebar__brand-mark,
+.sidebar__avatar,
+.header__avatar { color: #0c1b1b; background: #ffae1b; }
+.sidebar__brand-mark { box-shadow: 0 9px 0 -5px rgba(255, 174, 27, .35); transform: rotate(-4deg); }
+.sidebar__brand-text { font-family: var(--heading); font-size: 22px; font-weight: 800; }
+.sidebar__link { border-radius: 999px; }
+.sidebar__link--active {
+  color: #0c1b1b;
+  background: #ffae1b;
+  box-shadow: none;
+}
+.sidebar__link--active::before { display: none; }
+.sidebar__link--active .icon { stroke-width: 2.2; }
+
+.header { background: rgba(248, 247, 240, .88); }
+.header__title { font-family: var(--heading); font-weight: 750; }
+.header__eyebrow { color: #946000; }
+.header__cta,
+.event-form__submit,
+.admin-role-btn,
+.auth-submit {
+  color: #0c1b1b;
+  background: #ffae1b;
+  box-shadow: 0 8px 0 -5px rgba(12, 27, 27, .45);
+}
+.header__cta:hover { box-shadow: 0 11px 0 -6px rgba(12, 27, 27, .45); }
+
+.dashboard-hero,
+.product-hero--calendar,
+.product-hero--plans,
+.product-hero--insights {
+  color: #0c1b1b;
+  background:
+    radial-gradient(circle at 84% 20%, rgba(255,255,255,.4), transparent 25%),
+    #ffae1b;
+  border: 1px solid #0c1b1b;
+  box-shadow: 10px 10px 0 #0c1b1b;
+}
+.dashboard-hero h2,
+.product-hero h2 { color: #0c1b1b; font-weight: 800; text-transform: none; }
+.dashboard-hero__eyebrow,
+.dashboard-hero p,
+.dashboard-hero__orb small,
+.product-hero p { color: #24312f; }
+.dashboard-hero__orb { background: rgba(255,255,255,.28); border: 1px solid rgba(12,27,27,.35); }
+.primary-action { color: #fff; background: #0c1b1b; }
+.secondary-action { color: #0c1b1b; background: transparent; border-color: #0c1b1b; }
+
+.dashboard-panel--tips {
+  color: #dce4e1;
+  background: #0c1b1b;
+  border: 1px solid #0c1b1b;
+}
+.dashboard-panel--tips button { color: #0c1b1b; background: #ffae1b; }
+
+.metric-card,
+.dashboard-panel,
+.event-card,
+.calendar-card,
+.day-agenda,
+.plan-card,
+.insight-panel,
+.insight-metrics article {
+  background: #fffefa;
+  border-color: #cfd7d2;
+  border-radius: 20px;
+}
+.metric-card:hover,
+.event-card:hover,
+.plan-card:hover {
+  border-color: #0c1b1b;
+  box-shadow: 7px 7px 0 #ffae1b;
+}
+.section-kicker { color: #9b6200; }
+.metric-card__icon--violet,
+.metric-card__icon--blue,
+.metric-card__icon--orange,
+.metric-card__icon--green { color: #0c1b1b; background: #ffdf99; }
+.agenda-item__line,
+.agenda-item__line--2,
+.agenda-item__line--3,
+.calendar-grid .dot,
+.calendar-grid .dot--2,
+.calendar-grid .dot--3 { background: #ffae1b; }
+
+.filter-rail button.is-active,
+.event-detail__choices button.is-active {
+  color: #0c1b1b;
+  background: #ffae1b;
+  box-shadow: none;
+}
+.event-detail__cover { color: #0c1b1b; background: #ffae1b; }
+.event-detail__cover h2 { color: #0c1b1b; }
+.audience-bar i:nth-child(1), .chart-legend i { background: #197367; }
+.audience-bar i:nth-child(2), .chart-legend span:nth-child(2) i { background: #ffae1b; }
+.audience-bar i:nth-child(3), .chart-legend span:nth-child(3) i { background: #df6e43; }
+
+.auth-layout__visual {
+  background:
+    radial-gradient(500px 420px at 10% 0%, rgba(255,174,27,.2), transparent 62%),
+    #0c1b1b;
+}
+.auth-layout__brand-mark { color: #0c1b1b; background: #ffae1b; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .dashboard-hero, .product-hero { animation: stage-rise .55s cubic-bezier(.2,.7,.2,1) both; }
+  .metric-card, .event-card, .plan-card, .insight-metrics article { transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
+  @keyframes stage-rise { from { opacity: 0; transform: translateY(16px) scale(.985); } to { opacity: 1; transform: none; } }
 }
 
 body {
@@ -145,3 +286,32 @@ body {
   body { background: radial-gradient(circle at 85% 0%, rgba(34, 211, 238,.08), transparent 30rem), #0c1427; }
   .header { background: rgba(12, 20, 39, .82); }
 }
+
+/* Final Stage palette overrides intentionally sit last in the cascade. */
+:root {
+  --text:#53605d; --text-h:#0c1b1b; --bg:#fffefa; --border:#d7ddd8; --code-bg:#f3f2e9;
+  --accent:#9b6200; --accent-bg:rgba(255,174,27,.18); --accent-border:rgba(155,98,0,.42);
+  --sans:'Poppins',system-ui,sans-serif; --heading:'Bricolage Grotesque',system-ui,sans-serif;
+  --shadow:0 18px 0 -12px rgba(12,27,27,.11),0 24px 55px -38px rgba(12,27,27,.36); color-scheme:light;
+}
+body { background:radial-gradient(circle at 92% 2%,rgba(255,174,27,.18),transparent 25rem),#f8f7f0; }
+.sidebar { --sidebar-bg:#071313;--sidebar-bg-alt:#0c1b1b;--sidebar-text:#b9c5c1;background:radial-gradient(420px 380px at -20% 0%,rgba(255,174,27,.17),transparent 64%),linear-gradient(180deg,#071313,#0c1b1b); }
+.sidebar__brand-mark,.sidebar__avatar,.header__avatar { color:#0c1b1b;background:#ffae1b; }
+.sidebar__brand-mark { box-shadow:0 9px 0 -5px rgba(255,174,27,.35);transform:rotate(-4deg); }
+.sidebar__link--active { color:#0c1b1b;background:#ffae1b;box-shadow:none; }
+.sidebar__link--active::before { display:none; }
+.header { background:rgba(248,247,240,.88); }
+.header__cta,.event-form__submit,.admin-role-btn,.auth-submit { color:#0c1b1b;background:#ffae1b;box-shadow:0 8px 0 -5px rgba(12,27,27,.45); }
+.dashboard-hero,.product-hero--calendar,.product-hero--plans,.product-hero--insights { color:#0c1b1b;background:radial-gradient(circle at 84% 20%,rgba(255,255,255,.4),transparent 25%),#ffae1b;border:1px solid #0c1b1b;box-shadow:10px 10px 0 #0c1b1b; }
+.dashboard-hero h2,.product-hero h2 { color:#0c1b1b;font-weight:800; }
+.dashboard-hero__eyebrow,.dashboard-hero p,.dashboard-hero__orb small,.product-hero p { color:#24312f; }
+.primary-action { color:#fff;background:#0c1b1b; }.secondary-action { color:#0c1b1b;background:transparent;border-color:#0c1b1b; }
+.dashboard-panel--tips { color:#dce4e1;background:#0c1b1b;border-color:#0c1b1b; }.dashboard-panel--tips button { color:#0c1b1b;background:#ffae1b; }
+.metric-card,.dashboard-panel,.event-card,.calendar-card,.day-agenda,.plan-card,.insight-panel,.insight-metrics article { background:#fffefa;border-color:#cfd7d2; }
+.metric-card:hover,.event-card:hover,.plan-card:hover { border-color:#0c1b1b;box-shadow:7px 7px 0 #ffae1b; }
+.metric-card__icon--violet,.metric-card__icon--blue,.metric-card__icon--orange,.metric-card__icon--green { color:#0c1b1b;background:#ffdf99; }
+.agenda-item__line,.agenda-item__line--2,.agenda-item__line--3,.calendar-grid .dot,.calendar-grid .dot--2,.calendar-grid .dot--3 { background:#ffae1b; }
+.filter-rail button.is-active,.event-detail__choices button.is-active { color:#0c1b1b;background:#ffae1b;box-shadow:none; }
+.event-detail__cover { color:#0c1b1b;background:#ffae1b; }.event-detail__cover h2 { color:#0c1b1b; }
+.auth-layout__visual { background:radial-gradient(500px 420px at 10% 0%,rgba(255,174,27,.2),transparent 62%),#0c1b1b; }
+.auth-layout__brand-mark { color:#0c1b1b;background:#ffae1b; }
