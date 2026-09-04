@@ -9,6 +9,9 @@ import {
   IconUsers,
   IconLogOut,
   IconX,
+  IconCalendar,
+  IconHeart,
+  IconChart,
 } from './icons'
 import './Sidebar.css'
 
@@ -54,6 +57,24 @@ function Sidebar({ open, onClose }) {
                 <NavLink to="/events" className={navLinkClass}>
                   <IconEvents className="icon" />
                   <span>Events</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/calendar" className={navLinkClass}>
+                  <IconCalendar className="icon" />
+                  <span>Calendar</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/my-plans" className={navLinkClass}>
+                  <IconHeart className="icon" />
+                  <span>My plans</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/insights" className={navLinkClass}>
+                  <IconChart className="icon" />
+                  <span>Insights</span>
                 </NavLink>
               </li>
             </ul>

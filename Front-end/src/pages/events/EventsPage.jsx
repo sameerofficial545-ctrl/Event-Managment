@@ -8,6 +8,7 @@ import EventList from './EventList'
 import GuestList from './GuestList'
 import EventDetail from './EventDetail'
 import './Events.css'
+import './EventsEnhancements.css'
 
 function toLocalDateKey(isoString) {
   const date = new Date(isoString)
@@ -25,6 +26,9 @@ function EventsPage() {
   const [guestEvent, setGuestEvent] = useState(null)
   const [filters, setFilters] = useState(() => ({ ...DEFAULT_FILTERS, search: searchParams.get('search') || '' }))
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [sort, setSort] = useState('soonest')
+  const [layout, setLayout] = useState('grid')
+  const [page, setPage] = useState(1)
 
   const loadEvents = useCallback(() => {
     setLoading(true)
@@ -71,6 +75,16 @@ function EventsPage() {
       return true
     })
   }, [events, filters])
+
+  const sortedEvents = useMemo(() => [...filteredEvents].sort((a, b) => {
+    if (sort === 'latest') return new Date(b.start_time) - new Date(a.start_time)
+    if (sort === 'title') return a.title.localeCompare(b.title)
+    return new Date(a.start_time) - new Date(b.start_time)
+  }), [filteredEvents, sort])
+  const pageCount = Math.max(1, Math.ceil(sortedEvents.length / 6))
+  const visibleEvents = sortedEvents.slice((page - 1) * 6, page * 6)
+
+  useEffect(() => setPage(1), [filters, sort])
 
   const handleCreateClick = () => {
     setEditingEvent(null)
@@ -155,6 +169,19 @@ function EventsPage() {
             <EventFilters filters={filters} onChange={setFilters} />
           )}
 
+          {!loading && filteredEvents.length > 0 && (
+            <div className="events-toolbar">
+              <span><strong>{filteredEvents.length}</strong> event{filteredEvents.length === 1 ? '' : 's'} found</span>
+              <div className="events-toolbar__controls">
+                <label>Sort <select value={sort} onChange={(event) => setSort(event.target.value)}><option value="soonest">Soonest first</option><option value="latest">Latest first</option><option value="title">A to Z</option></select></label>
+                <div className="layout-toggle" aria-label="Event layout">
+                  <button type="button" className={layout === 'grid' ? 'is-active' : ''} onClick={() => setLayout('grid')} aria-label="Grid view">▦</button>
+                  <button type="button" className={layout === 'list' ? 'is-active' : ''} onClick={() => setLayout('list')} aria-label="List view">☰</button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {loading ? (
             <p className="events-status">Loading events…</p>
           ) : hasNoMatches ? (
@@ -171,13 +198,21 @@ function EventsPage() {
             </div>
           ) : (
             <EventList
-              events={filteredEvents}
+              events={visibleEvents}
+              layout={layout}
               onEdit={handleEditClick}
               onDelete={handleDelete}
               onCreate={handleCreateClick}
               onGuests={handleGuestsClick}
               onSelect={(event) => { setSelectedEvent(event); setSearchParams({ event: String(event.id) }) }}
             />
+          )}
+          {!loading && pageCount > 1 && (
+            <nav className="pagination" aria-label="Event pages">
+              <button type="button" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>Previous</button>
+              <span>Page {page} of {pageCount}</span>
+              <button type="button" disabled={page === pageCount} onClick={() => setPage((value) => value + 1)}>Next</button>
+            </nav>
           )}
           {selectedEvent && <EventDetail event={selectedEvent} onClose={() => { setSelectedEvent(null); setSearchParams({}) }} onEdit={handleEditClick} onGuests={handleGuestsClick} />}
         </>

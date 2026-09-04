@@ -1,0 +1,19 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import api, { parseApiError } from '../../api/client'
+import AppShell from '../../components/AppShell'
+import { IconArrowRight, IconCalendar, IconChart, IconClock, IconUsers } from '../../components/icons'
+import './ProductPages.css'
+
+function OrganizerInsights() {
+  const [events, setEvents] = useState([]); const [loading, setLoading] = useState(true); const [error, setError] = useState('')
+  useEffect(() => { api.get('/events/').then(async ({ data }) => { const mine = data.filter((event) => event.is_mine); const enriched = await Promise.all(mine.map(async (event) => { const [rsvps, guests] = await Promise.all([api.get(`/events/${event.id}/rsvps/`), api.get(`/events/${event.id}/guests/`)]); return { ...event, rsvps: rsvps.data, guests: guests.data } })); setEvents(enriched) }).catch((e) => setError(parseApiError(e).message)).finally(() => setLoading(false)) }, [])
+  const stats = useMemo(() => events.reduce((all,event) => ({ events: all.events+1, going: all.going+event.rsvps.filter((r)=>r.status==='going').length, maybe:all.maybe+event.rsvps.filter((r)=>r.status==='maybe').length, guests:all.guests+event.guests.length }), {events:0,going:0,maybe:0,guests:0}), [events])
+  const maxAudience = Math.max(1,...events.map((event)=>event.rsvps.length+event.guests.length))
+  return <AppShell headerProps={{ eyebrow:'Organizer', title:'Insights', onCtaClick:()=>window.location.assign('/events?create=1') }}><section className="product-hero product-hero--insights"><div><span>Live overview</span><h2>Turn responses into confidence.</h2><p>Understand interest across your events and focus on what needs attention next.</p></div><IconChart className="product-hero__icon" /></section>
+    {error && <p className="product-error">{error}</p>}<section className="insight-metrics">{[[stats.events,'Events hosted',IconCalendar],[stats.going,'Confirmed attendees',IconUsers],[stats.maybe,'Maybe responses',IconClock],[stats.guests,'Invited guests',IconUsers]].map(([value,label,Icon])=><article key={label}><Icon/><strong>{loading?'—':value}</strong><span>{label}</span></article>)}</section>
+    <section className="insights-layout"><div className="insight-panel"><div className="insight-panel__head"><div><span className="section-kicker">Audience pulse</span><h3>Response by event</h3></div><Link to="/events">Manage events <IconArrowRight/></Link></div>{events.length?<div className="audience-chart">{events.slice(0,7).map((event)=>{const going=event.rsvps.filter((r)=>r.status==='going').length;const maybe=event.rsvps.filter((r)=>r.status==='maybe').length;const invited=event.guests.length;return <div className="audience-row" key={event.id}><strong>{event.title}</strong><div className="audience-bar"><i style={{width:`${going/maxAudience*100}%`}}/><i style={{width:`${maybe/maxAudience*100}%`}}/><i style={{width:`${invited/maxAudience*100}%`}}/></div><span>{going+maybe+invited}</span></div>})}<div className="chart-legend"><span><i/>Going</span><span><i/>Maybe</span><span><i/>Invited</span></div></div>:<div className="product-empty product-empty--inside"><IconChart/><h3>Your insights start with an event</h3><p>Create your first event to see response trends here.</p><Link to="/events?create=1">Create event</Link></div>}</div>
+      <aside className="insight-panel insight-panel--health"><span className="section-kicker">Planning health</span><h3>{stats.events ? 'You’re building momentum' : 'Ready when you are'}</h3><div className="health-ring" style={{'--score':`${Math.min(100,stats.events*20+stats.going*5)*3.6}deg`}}><strong>{Math.min(100,stats.events*20+stats.going*5)}%</strong></div><p>Keep event details complete and follow up with guests who have not confirmed.</p></aside></section>
+  </AppShell>
+}
+export default OrganizerInsights

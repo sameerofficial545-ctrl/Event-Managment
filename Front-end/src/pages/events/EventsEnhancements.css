@@ -1,0 +1,25 @@
+.events-toolbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin: 16px 0; color: var(--text); font-size: 11px;
+}
+.events-toolbar strong { color: var(--text-h); }
+.events-toolbar__controls, .events-toolbar label, .layout-toggle { display: flex; align-items: center; gap: 8px; }
+.events-toolbar select { padding: 8px 30px 8px 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg); color: var(--text-h); font: inherit; font-size: 10px; }
+.layout-toggle { gap: 2px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--code-bg); }
+.layout-toggle button { width: 30px; height: 27px; border: 0; border-radius: 7px; background: transparent; color: var(--text); cursor: pointer; }
+.layout-toggle button.is-active { background: var(--bg); color: var(--accent); box-shadow: 0 2px 7px rgba(15,23,42,.12); }
+.event-grid--list { grid-template-columns: 1fr; }
+.event-grid--list .event-card { display: grid; grid-template-columns: 62px minmax(170px,1.2fr) repeat(2,minmax(135px,.75fr)); column-gap: 18px; align-items: center; }
+.event-grid--list .event-card__date { grid-row: 1/5; }
+.event-grid--list .event-card__head, .event-grid--list .event-card__desc, .event-grid--list .event-card__open { grid-column: 2; }
+.event-grid--list .event-card__meta { margin: 0; }
+.event-grid--list .event-card__open { justify-self: start; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 24px; }
+.pagination button { padding: 8px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg); color: var(--text-h); font: inherit; font-size: 10px; cursor: pointer; }
+.pagination button:disabled { opacity: .4; cursor: not-allowed; }
+.pagination span { font-size: 10px; color: var(--text); }
+@media (max-width:800px) {
+  .events-toolbar { align-items: flex-start; flex-direction: column; }
+  .event-grid--list .event-card { display: block; }
+  .event-grid--list .event-card__date { float: left; margin-right: 12px; }
+}

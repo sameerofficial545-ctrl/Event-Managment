@@ -10,6 +10,9 @@ import ResetPassword from './pages/auth/ResetPassword'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import EventsPage from './pages/events/EventsPage'
 import Dashboard from './pages/dashboard/Dashboard'
+import CalendarPage from './pages/explore/CalendarPage'
+import MyPlans from './pages/explore/MyPlans'
+import OrganizerInsights from './pages/explore/OrganizerInsights'
 import './App.css'
 
 const STATS = [
@@ -78,6 +81,9 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/events" element={<EventsPage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/my-plans" element={<MyPlans />} />
+        <Route path="/insights" element={<OrganizerInsights />} />
       </Route>
       <Route element={<AdminRoute />}>
         <Route path="/admin" element={<AdminDashboard />} />

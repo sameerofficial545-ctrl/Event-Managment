@@ -36,7 +36,7 @@ function formatRange(event) {
     : `${startLabel} – ${formatDateTime(event.end_time)}`
 }
 
-function EventList({ events, onEdit, onDelete, onCreate, onGuests, onSelect }) {
+function EventList({ events, onEdit, onDelete, onCreate, onGuests, onSelect, layout = 'grid' }) {
   if (events.length === 0) {
     return (
       <div className="event-empty">
@@ -54,7 +54,7 @@ function EventList({ events, onEdit, onDelete, onCreate, onGuests, onSelect }) {
   }
 
   return (
-    <div className="event-grid">
+    <div className={`event-grid event-grid--${layout}`}>
       {events.map((event) => (
         <article className="event-card" key={event.id} onClick={() => onSelect(event)}>
           <div className="event-card__date" aria-hidden="true">
