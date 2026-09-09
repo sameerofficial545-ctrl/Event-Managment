@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.utils.functional import cached_property
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
@@ -94,11 +95,15 @@ class EventGuestListCreateView(generics.ListCreateAPIView):
     serializer_class = GuestSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_event(self):
+    @cached_property
+    def _guest_event(self):
         event = get_object_or_404(Event, pk=self.kwargs['event_id'])
         if event.organizer_id != self.request.user.id and not is_admin(self.request.user):
             raise PermissionDenied("Only the event's organizer can manage its guest list.")
         return event
+
+    def get_event(self):
+        return self._guest_event
 
     def get_queryset(self):
         return self.get_event().guests.all()
@@ -118,11 +123,15 @@ class EventGuestDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = GuestSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_event(self):
+    @cached_property
+    def _guest_event(self):
         event = get_object_or_404(Event, pk=self.kwargs['event_id'])
         if event.organizer_id != self.request.user.id and not is_admin(self.request.user):
             raise PermissionDenied("Only the event's organizer can manage its guest list.")
         return event
+
+    def get_event(self):
+        return self._guest_event
 
     def get_queryset(self):
         return Guest.objects.filter(event=self.get_event())

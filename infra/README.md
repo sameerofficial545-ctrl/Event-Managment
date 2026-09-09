@@ -4,6 +4,17 @@ Week 4: containerize the app and get it onto ECS Fargate via a
 CodePipeline/CodeBuild pipeline, fronted by a GitHub Actions CI gate and
 backed by automatic + manual rollback.
 
+## Current AWS status (verified 9 September 2026)
+
+The application is deployed in us-east-1 using stack event-mgmt-week4 and
+the consolidated template infra/week4-stack.yaml. RDS event-mgmt-postgres
+is available and connected to the running ECS backend. Seven-day backups,
+Container Insights, five alarms, and the event-mgmt dashboard are configured.
+The SNS alarm topic currently has no subscriptions.
+
+See [Week 5 verification](week5-verification.md) for restore-test evidence,
+guest-query measurements, and the exact deployment status of the latest changes.
+
 ## What's here
 
 ```
@@ -94,53 +105,22 @@ Two layers, for two different failure modes:
   and both `docker build`s. The workflow itself hasn't been observed
   running on GitHub's runners yet — that only happens once this is pushed.
 
-## What hasn't been done, and why
+## Deployment status and configuration
 
-Everything past this point needs a real AWS account, and I don't have
-credentials to one - so none of this has actually been created in AWS.
-This is the part that needs you:
+The earlier prerequisite-only instructions in this section are superseded:
+the VPC configuration, ECS services, ALB, RDS, Secrets Manager integration,
+GitHub connection, and pipeline now exist. Use infra/week4-stack.yaml as
+the current consolidated infrastructure definition. Files under infra/ecs
+and infra/pipeline are earlier standalone examples and contain placeholders.
 
-1. **One-time, manual (can't be scripted/CloudFormation'd):** authorize a
-   GitHub connection at CodePipeline → Settings → Connections, using the
-   `sameerofficial545-ctrl/Event-Managment` repo. Copy the resulting
-   connection ARN.
-2. **Prerequisites the templates assume already exist** and reference by
-   placeholder (`<ACCOUNT_ID>`, `<REGION>`, subnet/security-group IDs,
-   target-group ARNs): a VPC with public+private subnets, an ECS cluster
-   named `event-mgmt-cluster`, an ALB with target groups for each service,
-   and — since containers are ephemeral — an RDS Postgres instance (the
-   backend already reads `DATABASE_URL` via `dj-database-url`; sqlite is
-   dev-only and would lose all data on every deploy).
-3. **Secrets** referenced in `backend-task-definition.json` need to exist
-   in Secrets Manager first: `event-mgmt/django-secret-key`,
-   `event-mgmt/database-url`, `event-mgmt/email-host-user`,
-   `event-mgmt/email-host-password`. Separately, an OIDC IAM role for
-   `.github/workflows/rollback.yml` needs to exist, with its ARN and the
-   target AWS region stored as `AWS_DEPLOY_ROLE_ARN` / `AWS_REGION` in a
-   GitHub Actions `production` environment (the workflow's
-   `environment: production` gate can also require manual approval before
-   a rollback runs, if you want that safety net).
-4. Deploy the pipeline itself:
-   ```bash
-   aws cloudformation deploy \
-     --template-file infra/pipeline/pipeline.yaml \
-     --stack-name event-mgmt-pipeline \
-     --capabilities CAPABILITY_IAM \
-     --parameter-overrides \
-       GitHubConnectionArn=<connection-arn-from-step-1> \
-       FrontendApiUrl=https://<your-backend-domain>/api
-   ```
-5. Register the ECS task definitions and create the services (one-time;
-   the pipeline's ECS deploy action updates them on every push after this):
-   ```bash
-   aws ecs register-task-definition --cli-input-json file://infra/ecs/backend-task-definition.json
-   aws ecs register-task-definition --cli-input-json file://infra/ecs/frontend-task-definition.json
-   aws ecs create-service --cli-input-json file://infra/ecs/backend-service.json
-   aws ecs create-service --cli-input-json file://infra/ecs/frontend-service.json
-   ```
+The backend receives DB_HOST, DB_NAME and DB_PORT through its task environment,
+and DB_USER / DB_PASSWORD through Secrets Manager references. Do not copy secret
+values into documentation.
 
-After that, a push to `main` runs tests, builds both images, pushes to
-ECR, and rolls out new ECS deployments automatically.
+At the latest inspection, the pipeline reported Source Succeeded, Build Failed,
+and no successful Deploy stage. An earlier demonstration recorded a CodeBuild
+quota issue; inspect the current failure before retrying. The guest-query change
+described in week5-verification.md was deployed manually through ECR and ECS.
 
 ### Testing the trigger and rollback, once AWS is live
 
