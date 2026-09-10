@@ -204,6 +204,8 @@ Resources:
           - Effect: Allow
             Principal: {Service: ecs-tasks.amazonaws.com}
             Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
 
   BackendTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -219,10 +221,15 @@ Resources:
         - Name: backend
           Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/event-mgmt-backend:latest'
           Essential: true
+          DependsOn:
+            - ContainerName: xray-daemon
+              Condition: START
           PortMappings:
             - ContainerPort: 8000
           Environment:
             - {Name: DJANGO_DEBUG, Value: 'False'}
+            - {Name: AWS_XRAY_ENABLED, Value: 'True'}
+            - {Name: AWS_XRAY_TRACING_NAME, Value: event-mgmt-backend}
             - Name: DJANGO_SECRET_KEY
               Value: !Sub 'week4-${AWS::AccountId}-${AWS::StackId}'
             - Name: DJANGO_ALLOWED_HOSTS
@@ -254,6 +261,20 @@ Resources:
             Timeout: 5
             Retries: 3
             StartPeriod: 30
+        - Name: xray-daemon
+          Image: public.ecr.aws/xray/aws-xray-daemon:3.x
+          Essential: false
+          Cpu: 32
+          MemoryReservation: 128
+          PortMappings:
+            - ContainerPort: 2000
+              Protocol: udp
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref BackendLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: xray
   FrontendTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
@@ -586,7 +607,8 @@ Resources:
     Properties:
       Name: event-mgmt-hourly-reminders
       Description: Runs the Django event reminder command every hour.
-      State: ENABLED
+      # Superseded by the Lambda schedule in week6-serverless.yaml.
+      State: DISABLED
       ScheduleExpression: cron(0 * * * ? *)
       ScheduleExpressionTimezone: Asia/Kolkata
       FlexibleTimeWindow: {Mode: 'OFF'}

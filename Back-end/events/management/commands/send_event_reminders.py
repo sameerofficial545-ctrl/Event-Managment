@@ -30,6 +30,7 @@ class Command(BaseCommand):
             default=24,
             help='How many hours ahead to look for events to remind about (default: 24).',
         )
+        parser.add_argument('--dry-run', action='store_true', help='Report due reminders without sending or updating events.')
 
     def handle(self, *args, **options):
         now = timezone.now()
@@ -51,6 +52,10 @@ class Command(BaseCommand):
             ).values_list('user__email', flat=True)
             guest_emails = event.guests.exclude(email='').values_list('email', flat=True)
             recipients = sorted(set(attendee_emails) | set(guest_emails))
+
+            if options['dry_run']:
+                self.stdout.write(f'Would send reminder for "{event.title}" to {len(recipients)} recipient(s).')
+                continue
 
             for email in recipients:
                 send_mail(

@@ -59,6 +59,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    *(['aws_xray_sdk.ext.django.middleware.XRayMiddleware'] if os.environ.get('AWS_XRAY_ENABLED') == 'True' else []),
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -69,6 +70,14 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+XRAY_RECORDER = {
+    'AUTO_INSTRUMENT': True,
+    'AWS_XRAY_CONTEXT_MISSING': 'LOG_ERROR',
+    'PLUGINS': (),
+    'SAMPLING': True,
+    'SAMPLING_RULES': None,
+}
 
 ROOT_URLCONF = 'config.urls'
 
